@@ -32,7 +32,8 @@ menuKnoppen.forEach((knop) => {
 //   dagen: {
 //     "2026-11-18": {
 //       vastgezetOp: "2026-11-17T21:30:00.000Z",   (of null)
-//       taken: [ { naam, begintijd, duur, aanpak, focusblok }, ... ]
+//       taken: [ { naam, begintijd, duur, aanpak, focusblok,
+//                  gestartOp, klaarOp }, ... ]   (tijdstippen, of leeg)
 //     }
 //   }
 // }
@@ -75,6 +76,32 @@ function morgen() {
   return datum;
 }
 
+// Datum als leesbare tekst, bijvoorbeeld "woensdag 18 november"
+function datumTekst(datum) {
+  return datum.toLocaleDateString("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+// Tijdstip als "09:05"
+function tijdTekst(datum) {
+  return datum.toLocaleTimeString("nl-NL", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Rekent de eindtijd uit: "09:00" + 90 minuten = "10:30"
+function eindtijd(taak) {
+  const [uren, minuten] = taak.begintijd.split(":").map(Number);
+  const totaal = uren * 60 + minuten + taak.duur;
+  const eindUren = Math.floor(totaal / 60) % 24;
+  const eindMinuten = totaal % 60;
+  return `${String(eindUren).padStart(2, "0")}:${String(eindMinuten).padStart(2, "0")}`;
+}
+
 // ============================================================
 // Scherm "Morgen plannen"
 // ============================================================
@@ -90,11 +117,7 @@ function toonMorgen() {
   const gegevens = laadGegevens();
   const dag = haalDag(gegevens, datumSleutel(morgen()));
 
-  morgenDatum.textContent = morgen().toLocaleDateString("nl-NL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  morgenDatum.textContent = datumTekst(morgen());
 
   // Lijst leegmaken en opnieuw vullen, gesorteerd op begintijd
   takenLijst.innerHTML = "";
@@ -109,10 +132,7 @@ function toonMorgen() {
   vastzetKnop.hidden = isVast;
   vastgezetMelding.hidden = !isVast;
   if (isVast) {
-    const tijd = new Date(dag.vastgezetOp).toLocaleTimeString("nl-NL", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const tijd = tijdTekst(new Date(dag.vastgezetOp));
     vastgezetMelding.textContent = `Plan vastgezet om ${tijd}`;
   }
 
@@ -129,7 +149,7 @@ function maakTaakItem(taak) {
   const kop = document.createElement("div");
   const tijd = document.createElement("span");
   tijd.className = "tijd";
-  tijd.textContent = `${taak.begintijd} · ${taak.duur} min`;
+  tijd.textContent = `${taak.begintijd}–${eindtijd(taak)}`;
   kop.append(tijd, ` ${taak.naam}`);
 
   if (taak.focusblok) {
@@ -182,5 +202,80 @@ vastzetKnop.addEventListener("click", () => {
   toonMorgen();
 });
 
-// Bij het openen van de app meteen het scherm vullen
-toonMorgen();
+// ============================================================
+// Scherm "Vandaag"
+// ============================================================
+
+const tijdlijn = document.querySelector("#tijdlijn");
+const geenPlan = document.querySelector("#geen-plan");
+const vandaagDatum = document.querySelector("#vandaag-datum");
+
+function toonVandaag() {
+  const vandaag = new Date();
+  vandaagDatum.textContent = datumTekst(vandaag);
+
+  const gegevens = laadGegevens();
+  const dag = gegevens.dagen[datumSleutel(vandaag)];
+  const taken = dag ? dag.taken : [];
+
+  geenPlan.hidden = taken.length > 0;
+  tijdlijn.innerHTML = "";
+
+  // We onthouden bij elke taak zijn plek (nummer) in de opgeslagen lijst.
+  // Na het sorteren weten we dan nog steeds welke taak we moeten bijwerken.
+  const metNummer = taken.map((taak, nummer) => ({ taak, nummer }));
+  metNummer.sort((a, b) => a.taak.begintijd.localeCompare(b.taak.begintijd));
+
+  metNummer.forEach(({ taak, nummer }) => {
+    const item = maakTaakItem(taak);
+    if (taak.klaarOp) item.classList.add("klaar");
+    else if (taak.gestartOp) item.classList.add("bezig");
+
+    const knoppen = document.createElement("div");
+    knoppen.className = "knoppen";
+
+    const startKnop = document.createElement("button");
+    startKnop.textContent = taak.gestartOp
+      ? `Gestart ${tijdTekst(new Date(taak.gestartOp))}`
+      : "Gestart";
+    startKnop.disabled = Boolean(taak.gestartOp);
+    startKnop.addEventListener("click", () => zetTijdstip(nummer, "gestartOp"));
+
+    const klaarKnop = document.createElement("button");
+    klaarKnop.className = "knop-klaar";
+    klaarKnop.textContent = taak.klaarOp
+      ? `Klaar ${tijdTekst(new Date(taak.klaarOp))}`
+      : "Klaar";
+    // Klaar kan pas als de taak gestart is, en maar één keer
+    klaarKnop.disabled = !taak.gestartOp || Boolean(taak.klaarOp);
+    klaarKnop.addEventListener("click", () => zetTijdstip(nummer, "klaarOp"));
+
+    knoppen.append(startKnop, klaarKnop);
+    item.append(knoppen);
+    tijdlijn.append(item);
+  });
+}
+
+// Bewaart het huidige tijdstip bij een taak van vandaag,
+// als "gestartOp" of als "klaarOp"
+function zetTijdstip(nummer, veld) {
+  const gegevens = laadGegevens();
+  const dag = gegevens.dagen[datumSleutel(new Date())];
+  dag.taken[nummer][veld] = new Date().toISOString();
+  bewaarGegevens(gegevens);
+  toonVandaag();
+}
+
+// ============================================================
+// Opstarten
+// ============================================================
+
+// Alle schermen vullen. Dit gebeurt ook bij elke wissel van scherm,
+// zodat je altijd de juiste dag ziet, ook als de app over middernacht open stond.
+function toonAlles() {
+  toonMorgen();
+  toonVandaag();
+}
+
+menuKnoppen.forEach((knop) => knop.addEventListener("click", toonAlles));
+toonAlles();

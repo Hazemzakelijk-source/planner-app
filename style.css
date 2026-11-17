@@ -167,3 +167,70 @@ form button,
   color: #16a34a;
   font-weight: bold;
 }
+
+/* ---------- Scherm "Vandaag" ---------- */
+
+/* De tijdlijn: een verticale lijn links, met per taak een bolletje */
+.tijdlijn {
+  list-style: none;
+  padding: 0 0 0 20px;
+  margin: 16px 0 0;
+  border-left: 3px solid #cbd5e1;
+}
+
+.tijdlijn li {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+/* Het bolletje op de lijn; ::before maakt een extra vormpje zonder HTML */
+.tijdlijn li::before {
+  content: "";
+  position: absolute;
+  left: -29px;
+  top: 16px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+.tijdlijn li.bezig::before {
+  background: #2563eb;
+}
+
+.tijdlijn li.klaar::before {
+  background: #16a34a;
+}
+
+.tijdlijn li.klaar {
+  opacity: 0.7;
+}
+
+.knoppen {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.knoppen button {
+  flex: 1;
+  font-size: 1rem;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+}
+
+.knoppen button.knop-klaar {
+  background: #16a34a;
+}
+
+.knoppen button:disabled {
+  background: #e5e7eb;
+  color: #555;
+}
