@@ -160,7 +160,46 @@ function toonMorgen() {
 
   // Een leeg plan vastzetten heeft geen zin
   vastzetKnop.disabled = dag.taken.length === 0;
+
+  // Kopiëren kan alleen als vandaag een plan heeft en morgen nog niet vastzit
+  kopieerKnop.hidden = isVast || takenVanVandaag(gegevens).length === 0;
 }
+
+// ---------- Plan van vandaag kopiëren ----------
+
+const kopieerKnop = document.querySelector("#kopieer-knop");
+
+function takenVanVandaag(gegevens) {
+  const vandaag = gegevens.dagen[datumSleutel(new Date())];
+  return vandaag ? vandaag.taken : [];
+}
+
+kopieerKnop.addEventListener("click", () => {
+  const gegevens = laadGegevens();
+  const dag = haalDag(gegevens, datumSleutel(morgen()));
+
+  // Staat er al iets voor morgen? Dan eerst vragen of het weg mag.
+  if (
+    dag.taken.length > 0 &&
+    !confirm("Dit vervangt de taken die je al voor morgen hebt gepland. Doorgaan?")
+  ) {
+    return;
+  }
+
+  // Alleen het plan kopiëren, niet wanneer je vandaag gestart of klaar was
+  dag.taken = takenVanVandaag(gegevens).map((taak) => ({
+    naam: taak.naam,
+    begintijd: taak.begintijd,
+    duur: taak.duur,
+    aanpak: taak.aanpak,
+    focusblok: taak.focusblok,
+    belangrijkste: Boolean(taak.belangrijkste),
+  }));
+
+  bewaarGegevens(gegevens);
+  stopBewerken();
+  toonMorgen();
+});
 
 // Maakt één <li> voor een taak.
 // We gebruiken textContent (niet innerHTML) zodat getypte tekst
