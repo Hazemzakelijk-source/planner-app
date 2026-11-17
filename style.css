@@ -359,3 +359,21 @@ input.notitie {
   width: 100%;
   font-style: italic;
 }
+
+/* Algemene witte kaart */
+.kaart {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+textarea {
+  font-family: inherit;
+  font-size: 16px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 100%;
+  resize: vertical;
+}

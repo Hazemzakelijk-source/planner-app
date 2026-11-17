@@ -451,6 +451,29 @@ function zetTijdstip(nummer, veld) {
   toonVandaag();
 }
 
+// ---------- Terugblik ----------
+
+// Vanaf dit uur is het "avond" en verschijnt de terugblik
+const AVOND_VANAF = 18;
+
+const terugblikKaart = document.querySelector("#terugblik-kaart");
+const terugblikVeld = document.querySelector("#terugblik");
+
+function toonTerugblik() {
+  const nu = new Date();
+  terugblikKaart.hidden = nu.getHours() < AVOND_VANAF;
+  const dag = laadGegevens().dagen[datumSleutel(nu)];
+  terugblikVeld.value = dag?.terugblik || "";
+}
+
+// Bij elke letter die je typt meteen bewaren, zodat er niets verloren gaat
+terugblikVeld.addEventListener("input", () => {
+  const gegevens = laadGegevens();
+  const dag = haalDag(gegevens, datumSleutel(new Date()));
+  dag.terugblik = terugblikVeld.value;
+  bewaarGegevens(gegevens);
+});
+
 // ---------- Extra taken ----------
 
 const extraFormulier = document.querySelector("#extra-formulier");
@@ -584,6 +607,7 @@ function toonScore() {
 function toonAlles() {
   toonMorgen();
   toonVandaag();
+  toonTerugblik();
   toonScore();
 }
 
