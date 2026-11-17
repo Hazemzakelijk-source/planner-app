@@ -38,6 +38,10 @@
         <label class="vinkje">
           <input name="belangrijkste" type="checkbox"> Belangrijkste taak van de dag
         </label>
+        <!-- Alleen zichtbaar (en verplicht) als "belangrijkste" is aangevinkt -->
+        <label id="waarom-veld" hidden>Waarom is dit belangrijk?
+          <input name="waarom" type="text">
+        </label>
         <button type="submit" id="opslaan-knop">Taak toevoegen</button>
         <!-- Alleen zichtbaar tijdens het bewerken van een taak -->
         <button type="button" id="annuleer-knop" class="knop-annuleren" hidden>Annuleren</button>

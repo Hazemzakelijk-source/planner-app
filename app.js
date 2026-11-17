@@ -200,6 +200,7 @@ kopieerKnop.addEventListener("click", () => {
     aanpak: taak.aanpak,
     focusblok: taak.focusblok,
     belangrijkste: Boolean(taak.belangrijkste),
+    waarom: taak.waarom || "",
   }));
 
   bewaarGegevens(gegevens);
@@ -247,8 +248,41 @@ function maakTaakItem(taak) {
     item.append(aanpak);
   }
 
+  if (taak.belangrijkste && taak.waarom) {
+    const waarom = document.createElement("p");
+    waarom.className = "aanpak";
+    waarom.textContent = `Waarom: ${taak.waarom}`;
+    item.append(waarom);
+  }
+
   return item;
 }
+
+// ---------- Regels voor de belangrijkste taak ----------
+
+const MINIMALE_DUUR_BELANGRIJKSTE = 30;
+const waaromVeld = document.querySelector("#waarom-veld");
+
+// Past het formulier aan op het vinkje "belangrijkste":
+// het waarom-veld tonen en verplicht maken, en de duur controleren.
+function werkBelangrijksteRegelsBij() {
+  const velden = formulier.elements;
+  const belangrijk = velden.belangrijkste.checked;
+
+  waaromVeld.hidden = !belangrijk;
+  velden.waarom.required = belangrijk;
+
+  // setCustomValidity: een eigen foutmelding. Lege tekst = geen fout.
+  const teKort = belangrijk && Number(velden.duur.value) < MINIMALE_DUUR_BELANGRIJKSTE;
+  velden.duur.setCustomValidity(
+    teKort
+      ? `De belangrijkste taak moet minstens ${MINIMALE_DUUR_BELANGRIJKSTE} minuten duren.`
+      : ""
+  );
+}
+
+formulier.elements.belangrijkste.addEventListener("change", werkBelangrijksteRegelsBij);
+formulier.elements.duur.addEventListener("input", werkBelangrijksteRegelsBij);
 
 // ---------- Bewerken en verwijderen ----------
 
@@ -269,6 +303,8 @@ function startBewerken(taak, nummer) {
   velden.aanpak.value = taak.aanpak;
   velden.focusblok.checked = taak.focusblok;
   velden.belangrijkste.checked = Boolean(taak.belangrijkste);
+  velden.waarom.value = taak.waarom || "";
+  werkBelangrijksteRegelsBij();
 
   opslaanKnop.textContent = "Wijziging opslaan";
   annuleerKnop.hidden = false;
@@ -280,6 +316,8 @@ function startBewerken(taak, nummer) {
 function stopBewerken() {
   bewerkNummer = null;
   formulier.reset();
+  // reset() leegt de velden maar geeft geen signaal; regels dus zelf bijwerken
+  werkBelangrijksteRegelsBij();
   opslaanKnop.textContent = "Taak toevoegen";
   annuleerKnop.hidden = true;
 }
@@ -322,6 +360,8 @@ formulier.addEventListener("submit", (gebeurtenis) => {
     aanpak: velden.aanpak.value.trim(),
     focusblok: velden.focusblok.checked,
     belangrijkste: velden.belangrijkste.checked,
+    // De waarom-zin hoort alleen bij de belangrijkste taak
+    waarom: velden.belangrijkste.checked ? velden.waarom.value.trim() : "",
   };
 
   if (bewerkNummer === null) {
