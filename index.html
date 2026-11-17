@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <!-- Zorgt dat de pagina op een telefoon op ware grootte wordt getoond -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dagplanner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <!-- Scherm 1: Morgen plannen -->
+    <section id="scherm-morgen" class="scherm">
+      <h1>Morgen plannen</h1>
+    </section>
+
+    <!-- Scherm 2: Vandaag -->
+    <section id="scherm-vandaag" class="scherm" hidden>
+      <h1>Vandaag</h1>
+    </section>
+
+    <!-- Scherm 3: Score -->
+    <section id="scherm-score" class="scherm" hidden>
+      <h1>Score</h1>
+    </section>
+  </main>
+
+  <!-- Menu onderaan: elke knop weet via data-scherm welk scherm hij opent -->
+  <nav class="menu">
+    <button data-scherm="scherm-morgen" class="actief">Morgen</button>
+    <button data-scherm="scherm-vandaag">Vandaag</button>
+    <button data-scherm="scherm-score">Score</button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>

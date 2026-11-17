@@ -1,0 +1,47 @@
+/* Basis: één lettertype en geen standaardmarges van de browser */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f4f4f6;
+  color: #222;
+}
+
+/* Ruimte onderaan zodat de inhoud niet achter het menu verdwijnt */
+main {
+  padding: 16px 16px 80px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+/* Menu vast onderaan het scherm, makkelijk te bereiken met je duim */
+.menu {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: #fff;
+  border-top: 1px solid #ddd;
+}
+
+.menu button {
+  flex: 1;              /* drie knoppen, even breed */
+  padding: 16px 0;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  color: #666;
+}
+
+.menu button.actief {
+  color: #2563eb;
+  font-weight: bold;
+}
