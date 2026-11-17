@@ -389,7 +389,7 @@ vastzetDialoog
   .addEventListener("click", zetPlanVast);
 
 // Het tijdstip bewaren. Dat hebben we nodig voor de score
-// (vóór 23:00 vastgezet = 20 punten).
+// (vóór middernacht vastgezet = 20 punten).
 function zetPlanVast() {
   const gegevens = laadGegevens();
   const dag = haalDag(gegevens, datumSleutel(morgen()));
@@ -650,14 +650,11 @@ function dagScore(sleutel) {
 
   let punten = 0;
 
-  // 20 punten: plan vastgezet op de avond ervoor, vóór 23:00
+  // 20 punten: plan vastgezet op de dag ervoor, dus uiterlijk om middernacht
   if (dag.vastgezetOp) {
     const vastgezet = new Date(dag.vastgezetOp);
-    const avondErvoor = dagenTerug(datumVanSleutel(sleutel), 1);
-    if (
-      datumSleutel(vastgezet) === datumSleutel(avondErvoor) &&
-      vastgezet.getHours() < 23
-    ) {
+    const dagErvoor = dagenTerug(datumVanSleutel(sleutel), 1);
+    if (datumSleutel(vastgezet) === datumSleutel(dagErvoor)) {
       punten += 20;
     }
   }
