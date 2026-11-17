@@ -119,15 +119,37 @@ function toonMorgen() {
 
   morgenDatum.textContent = datumTekst(morgen());
 
-  // Lijst leegmaken en opnieuw vullen, gesorteerd op begintijd
-  takenLijst.innerHTML = "";
-  const gesorteerd = [...dag.taken].sort((a, b) =>
-    a.begintijd.localeCompare(b.begintijd)
-  );
-  gesorteerd.forEach((taak) => takenLijst.append(maakTaakItem(taak)));
-
-  // Is het plan al vastgezet? Dan kan er niets meer bij.
+  // Is het plan al vastgezet? Dan kan er niets meer bij of af.
   const isVast = dag.vastgezetOp !== null;
+
+  // Lijst leegmaken en opnieuw vullen, gesorteerd op begintijd.
+  // Net als bij "Vandaag" onthouden we het nummer van elke taak in de opslag.
+  takenLijst.innerHTML = "";
+  const metNummer = dag.taken.map((taak, nummer) => ({ taak, nummer }));
+  metNummer.sort((a, b) => a.taak.begintijd.localeCompare(b.taak.begintijd));
+
+  metNummer.forEach(({ taak, nummer }) => {
+    const item = maakTaakItem(taak);
+
+    if (!isVast) {
+      const knoppen = document.createElement("div");
+      knoppen.className = "knoppen";
+
+      const bewerkKnop = document.createElement("button");
+      bewerkKnop.textContent = "Bewerken";
+      bewerkKnop.addEventListener("click", () => startBewerken(taak, nummer));
+
+      const verwijderKnop = document.createElement("button");
+      verwijderKnop.className = "knop-verwijderen";
+      verwijderKnop.textContent = "Verwijderen";
+      verwijderKnop.addEventListener("click", () => verwijderTaak(taak, nummer));
+
+      knoppen.append(bewerkKnop, verwijderKnop);
+      item.append(knoppen);
+    }
+
+    takenLijst.append(item);
+  });
   formulier.hidden = isVast;
   vastzetKnop.hidden = isVast;
   vastgezetMelding.hidden = !isVast;
@@ -176,7 +198,58 @@ function maakTaakItem(taak) {
   return item;
 }
 
-// Formulier verstuurd: taak toevoegen en bewaren
+// ---------- Bewerken en verwijderen ----------
+
+const opslaanKnop = document.querySelector("#opslaan-knop");
+const annuleerKnop = document.querySelector("#annuleer-knop");
+
+// Het nummer van de taak die je aan het bewerken bent, of null als je
+// gewoon een nieuwe taak toevoegt
+let bewerkNummer = null;
+
+// Zet de gegevens van een taak in het formulier, zodat je ze kunt aanpassen
+function startBewerken(taak, nummer) {
+  bewerkNummer = nummer;
+  const velden = formulier.elements;
+  velden.naam.value = taak.naam;
+  velden.begintijd.value = taak.begintijd;
+  velden.duur.value = taak.duur;
+  velden.aanpak.value = taak.aanpak;
+  velden.focusblok.checked = taak.focusblok;
+  velden.belangrijkste.checked = Boolean(taak.belangrijkste);
+
+  opslaanKnop.textContent = "Wijziging opslaan";
+  annuleerKnop.hidden = false;
+  // Naar het formulier scrollen, zodat je ziet dat je aan het bewerken bent
+  formulier.scrollIntoView({ behavior: "smooth" });
+}
+
+// Terug naar "nieuwe taak toevoegen"
+function stopBewerken() {
+  bewerkNummer = null;
+  formulier.reset();
+  opslaanKnop.textContent = "Taak toevoegen";
+  annuleerKnop.hidden = true;
+}
+
+function verwijderTaak(taak, nummer) {
+  // confirm() toont een venster met OK en Annuleren
+  if (!confirm(`"${taak.naam}" verwijderen?`)) return;
+
+  const gegevens = laadGegevens();
+  const dag = haalDag(gegevens, datumSleutel(morgen()));
+  // splice haalt 1 element weg op plek "nummer"
+  dag.taken.splice(nummer, 1);
+  bewaarGegevens(gegevens);
+
+  // Na verwijderen kloppen de nummers niet meer; stop dus met bewerken
+  stopBewerken();
+  toonMorgen();
+}
+
+annuleerKnop.addEventListener("click", stopBewerken);
+
+// Formulier verstuurd: nieuwe taak toevoegen, of de bewerkte taak vervangen
 formulier.addEventListener("submit", (gebeurtenis) => {
   // Standaard herlaadt een formulier de pagina; dat willen we niet
   gebeurtenis.preventDefault();
@@ -190,17 +263,23 @@ formulier.addEventListener("submit", (gebeurtenis) => {
     dag.taken.forEach((taak) => (taak.belangrijkste = false));
   }
 
-  dag.taken.push({
+  const taak = {
     naam: velden.naam.value.trim(),
     begintijd: velden.begintijd.value,
     duur: Number(velden.duur.value),
     aanpak: velden.aanpak.value.trim(),
     focusblok: velden.focusblok.checked,
     belangrijkste: velden.belangrijkste.checked,
-  });
+  };
+
+  if (bewerkNummer === null) {
+    dag.taken.push(taak);
+  } else {
+    dag.taken[bewerkNummer] = taak;
+  }
 
   bewaarGegevens(gegevens);
-  formulier.reset();
+  stopBewerken();
   toonMorgen();
 });
 
@@ -211,6 +290,7 @@ vastzetKnop.addEventListener("click", () => {
   const dag = haalDag(gegevens, datumSleutel(morgen()));
   dag.vastgezetOp = new Date().toISOString();
   bewaarGegevens(gegevens);
+  stopBewerken();
   toonMorgen();
 });
 

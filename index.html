@@ -36,7 +36,9 @@
         <label class="vinkje">
           <input name="belangrijkste" type="checkbox"> Belangrijkste taak van de dag
         </label>
-        <button type="submit">Taak toevoegen</button>
+        <button type="submit" id="opslaan-knop">Taak toevoegen</button>
+        <!-- Alleen zichtbaar tijdens het bewerken van een taak -->
+        <button type="button" id="annuleer-knop" class="knop-annuleren" hidden>Annuleren</button>
       </form>
 
       <!-- Hier zet JavaScript de lijst met taken neer -->

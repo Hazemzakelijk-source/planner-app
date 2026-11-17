@@ -162,6 +162,15 @@ form button,
   font-size: 0.75rem;
 }
 
+form button.knop-annuleren {
+  background: #e5e7eb;
+  color: #222;
+}
+
+.knoppen button.knop-verwijderen {
+  background: #dc2626;
+}
+
 .label-belangrijkste {
   background: #fecaca;
 }
