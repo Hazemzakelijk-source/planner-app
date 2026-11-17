@@ -155,7 +155,7 @@ function toonMorgen() {
   vastgezetMelding.hidden = !isVast;
   if (isVast) {
     const tijd = tijdTekst(new Date(dag.vastgezetOp));
-    vastgezetMelding.textContent = `Plan vastgezet om ${tijd}`;
+    vastgezetMelding.textContent = `🔒 Plan vastgezet om ${tijd}`;
   }
 
   // Een leeg plan vastzetten heeft geen zin
@@ -224,19 +224,19 @@ function maakTaakItem(taak) {
   if (taak.extra) {
     const label = document.createElement("span");
     label.className = "label-focus label-extra";
-    label.textContent = "Extra";
+    label.textContent = "➕ Extra";
     kop.append(label);
   }
   if (taak.belangrijkste) {
     const label = document.createElement("span");
     label.className = "label-focus label-belangrijkste";
-    label.textContent = "Belangrijkste";
+    label.textContent = "🎯 Belangrijkste";
     kop.append(label);
   }
   if (taak.focusblok) {
     const label = document.createElement("span");
     label.className = "label-focus";
-    label.textContent = "Focusblok";
+    label.textContent = "⏱️ Focusblok";
     kop.append(label);
   }
   item.append(kop);
@@ -461,7 +461,7 @@ function toonVandaag() {
       const notitie = document.createElement("input");
       notitie.type = "text";
       notitie.className = "notitie";
-      notitie.placeholder = "Notitie: hoe ging het?";
+      notitie.placeholder = "📝 Notitie: hoe ging het?";
       notitie.value = taak.notitie || "";
       notitie.addEventListener("change", () => bewaarNotitie(nummer, notitie.value));
       item.append(notitie);
@@ -519,7 +519,7 @@ function maakFocustimer(taak, nummer) {
     blok.append(tijd, stopKnop);
   } else {
     const startKnop = document.createElement("button");
-    startKnop.textContent = `Start focustimer (${taak.duur} min)`;
+    startKnop.textContent = `⏱️ Start focustimer (${taak.duur} min)`;
     startKnop.addEventListener("click", () => startTimer(nummer));
     blok.append(startKnop);
   }
@@ -547,7 +547,7 @@ function stopTimer(nummer) {
 // Resterende tijd als "24:59", of een melding als de tijd om is
 function resterendeTijd(eindOp) {
   const seconden = Math.ceil((new Date(eindOp) - Date.now()) / 1000);
-  if (seconden <= 0) return "Focustijd voorbij";
+  if (seconden <= 0) return "Focustijd voorbij ✅";
   const minuten = Math.floor(seconden / 60);
   const rest = seconden % 60;
   return `${minuten}:${String(rest).padStart(2, "0")}`;
