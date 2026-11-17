@@ -98,18 +98,31 @@
       </form>
     </section>
 
-    <!-- Scherm 3: Score -->
+    <!-- Scherm 3: Disciplinescore -->
     <section id="scherm-score" class="scherm" hidden>
-      <h1>Score</h1>
+      <h1>Disciplinescore</h1>
 
       <div class="scorekaart">
+        <p id="score-emoji" class="emoji"></p>
         <p id="score-vandaag" class="getal"></p>
         <p>Score van vandaag (max. 100)</p>
+      </div>
+
+      <!-- Voortgangsbalk: punten van maandag t/m vandaag, van maximaal 700 -->
+      <div class="scorekaart">
+        <p class="kaarttitel">Deze week</p>
+        <div class="balk" role="progressbar" id="week-balk" aria-valuemin="0" aria-valuemax="700">
+          <div class="balk-vulling" id="week-balk-vulling"></div>
+        </div>
+        <p id="week-tekst"></p>
       </div>
 
       <div class="scorekaart">
         <p id="score-week" class="getal"></p>
         <p>Weekgemiddelde (7 dagen vóór vandaag)</p>
+        <!-- Staafgrafiek van dezelfde 7 dagen; JavaScript tekent de staven -->
+        <div id="grafiek" class="grafiek"></div>
+        <p id="grafiek-uitleg" class="grafiek-uitleg"></p>
       </div>
 
       <div class="scorekaart">
@@ -123,7 +136,7 @@
   <nav class="menu">
     <button data-scherm="scherm-morgen" class="actief">Morgen</button>
     <button data-scherm="scherm-vandaag">Vandaag</button>
-    <button data-scherm="scherm-score">Score</button>
+    <button data-scherm="scherm-score">Disciplinescore</button>
   </nav>
 
   <script src="app.js"></script>

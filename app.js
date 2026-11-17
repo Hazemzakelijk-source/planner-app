@@ -698,13 +698,86 @@ function reeks() {
   return aantal;
 }
 
+// Een emoji die past bij de score van vandaag
+function scoreEmoji(score) {
+  if (score >= 90) return "😎";
+  if (score >= 70) return "💪";
+  if (score >= 50) return "🙂";
+  if (score >= 25) return "😐";
+  return "😴";
+}
+
+// Punten van deze kalenderweek: maandag tot en met vandaag
+function puntenDezeWeek() {
+  const vandaag = new Date();
+  // getDay() geeft zondag = 0, maandag = 1 ... Zo rekenen we om naar
+  // "hoeveel dagen geleden was het maandag" (maandag = 0, zondag = 6).
+  const dagenSindsMaandag = (vandaag.getDay() + 6) % 7;
+  let totaal = 0;
+  for (let i = 0; i <= dagenSindsMaandag; i++) {
+    totaal += dagScore(datumSleutel(dagenTerug(vandaag, i)));
+  }
+  return totaal;
+}
+
+// Korte dagnaam en datum, bijvoorbeeld "di 10"
+function korteDag(datum) {
+  return datum.toLocaleDateString("nl-NL", { weekday: "short", day: "numeric" });
+}
+
+// Staafgrafiek van de 7 dagen vóór vandaag, oudste links.
+// Elke staaf is een <button>: tik erop om de score van die dag te zien.
+function tekenGrafiek() {
+  const grafiek = document.querySelector("#grafiek");
+  const uitleg = document.querySelector("#grafiek-uitleg");
+  grafiek.innerHTML = "";
+
+  for (let i = 7; i >= 1; i--) {
+    const datum = dagenTerug(new Date(), i);
+    const score = Math.round(dagScore(datumSleutel(datum)));
+    const tekst = `${datumTekst(datum)}: ${score} punten`;
+
+    const kolom = document.createElement("button");
+    kolom.className = "kolom";
+    kolom.setAttribute("aria-label", tekst);
+
+    // De hoogte van de staaf is de score als percentage (100 punten = 100%)
+    const staaf = document.createElement("div");
+    staaf.className = "staaf";
+    staaf.style.height = `${score}%`;
+
+    const label = document.createElement("span");
+    label.className = "kolom-label";
+    label.textContent = korteDag(datum);
+
+    kolom.append(staaf, label);
+    kolom.addEventListener("click", () => {
+      uitleg.textContent = tekst;
+      grafiek.querySelectorAll(".kolom").forEach((k) => k.classList.remove("gekozen"));
+      kolom.classList.add("gekozen");
+    });
+    grafiek.append(kolom);
+  }
+
+  uitleg.textContent = "Tik op een staaf voor de score van die dag.";
+}
+
 function toonScore() {
   // Math.round rondt af op hele punten, zodat je geen 66.666667 ziet
-  document.querySelector("#score-vandaag").textContent = Math.round(
-    dagScore(datumSleutel(new Date()))
-  );
+  const vandaag = Math.round(dagScore(datumSleutel(new Date())));
+  document.querySelector("#score-vandaag").textContent = vandaag;
+  document.querySelector("#score-emoji").textContent = scoreEmoji(vandaag);
+
+  // Voortgangsbalk: punten deze week van maximaal 7 x 100
+  const week = Math.round(puntenDezeWeek());
+  document.querySelector("#week-balk-vulling").style.width = `${(week / 700) * 100}%`;
+  document.querySelector("#week-balk").setAttribute("aria-valuenow", week);
+  document.querySelector("#week-tekst").textContent = `${week} van 700 punten (ma t/m zo)`;
+
   document.querySelector("#score-week").textContent = Math.round(weekGemiddelde());
-  document.querySelector("#score-reeks").textContent = reeks();
+  tekenGrafiek();
+
+  document.querySelector("#score-reeks").textContent = `🔥 ${reeks()}`;
 }
 
 // ============================================================
