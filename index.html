@@ -68,6 +68,23 @@
 
       <!-- Hier zet JavaScript de taken van vandaag neer, als tijdlijn -->
       <ol id="tijdlijn" class="tijdlijn"></ol>
+
+      <!-- Extra taken: tellen niet mee voor de score -->
+      <h2>Extra taak</h2>
+      <form id="extra-formulier">
+        <label>Taak
+          <input name="naam" type="text" required>
+        </label>
+        <div class="rij">
+          <label>Begintijd
+            <input name="begintijd" type="time" required>
+          </label>
+          <label>Duur (minuten)
+            <input name="duur" type="number" min="1" inputmode="numeric" required>
+          </label>
+        </div>
+        <button type="submit">Extra taak toevoegen</button>
+      </form>
     </section>
 
     <!-- Scherm 3: Score -->

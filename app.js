@@ -169,9 +169,15 @@ function toonMorgen() {
 
 const kopieerKnop = document.querySelector("#kopieer-knop");
 
+// De geplande taken van vandaag (extra taken horen niet bij het plan)
 function takenVanVandaag(gegevens) {
   const vandaag = gegevens.dagen[datumSleutel(new Date())];
-  return vandaag ? vandaag.taken : [];
+  return vandaag ? geplandeTaken(vandaag) : [];
+}
+
+// Alle taken van een dag, behalve de extra taken
+function geplandeTaken(dag) {
+  return dag.taken.filter((taak) => !taak.extra);
 }
 
 kopieerKnop.addEventListener("click", () => {
@@ -213,6 +219,12 @@ function maakTaakItem(taak) {
   tijd.textContent = `${taak.begintijd}–${eindtijd(taak)}`;
   kop.append(tijd, ` ${taak.naam}`);
 
+  if (taak.extra) {
+    const label = document.createElement("span");
+    label.className = "label-focus label-extra";
+    label.textContent = "Extra";
+    kop.append(label);
+  }
   if (taak.belangrijkste) {
     const label = document.createElement("span");
     label.className = "label-focus label-belangrijkste";
@@ -410,6 +422,29 @@ function zetTijdstip(nummer, veld) {
   toonVandaag();
 }
 
+// ---------- Extra taken ----------
+
+const extraFormulier = document.querySelector("#extra-formulier");
+
+extraFormulier.addEventListener("submit", (gebeurtenis) => {
+  gebeurtenis.preventDefault();
+  const velden = extraFormulier.elements;
+  const gegevens = laadGegevens();
+  // haalDag maakt de dag aan als er nog niets voor vandaag was
+  const dag = haalDag(gegevens, datumSleutel(new Date()));
+
+  dag.taken.push({
+    naam: velden.naam.value.trim(),
+    begintijd: velden.begintijd.value,
+    duur: Number(velden.duur.value),
+    extra: true,
+  });
+
+  bewaarGegevens(gegevens);
+  extraFormulier.reset();
+  toonVandaag();
+});
+
 // ============================================================
 // Score
 // ============================================================
@@ -442,9 +477,12 @@ function totaalGewicht(taken) {
 }
 
 // Score van één dag, van 0 tot 100. Een dag zonder taken scoort 0.
+// Extra taken tellen niet mee.
 function dagScore(sleutel) {
   const dag = laadGegevens().dagen[sleutel];
-  if (!dag || dag.taken.length === 0) return 0;
+  if (!dag) return 0;
+  const taken = geplandeTaken(dag);
+  if (taken.length === 0) return 0;
 
   let punten = 0;
 
@@ -460,14 +498,14 @@ function dagScore(sleutel) {
     }
   }
 
-  const afgerond = dag.taken.filter((taak) => taak.klaarOp);
+  const afgerond = taken.filter((taak) => taak.klaarOp);
   const opTijd = afgerond.filter(
     (taak) => new Date(taak.klaarOp) <= eindeBlok(sleutel, taak)
   );
 
   // De belangrijkste taak telt dubbel: hij weegt 2, een gewone taak 1.
   // We tellen dus geen taken meer, maar gewichten.
-  const gepland = totaalGewicht(dag.taken);
+  const gepland = totaalGewicht(taken);
 
   // 60 x (afgerond / gepland) en 20 x (op tijd afgerond / gepland)
   punten += (60 * totaalGewicht(afgerond)) / gepland;
