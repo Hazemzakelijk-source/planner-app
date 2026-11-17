@@ -322,16 +322,34 @@ formulier.addEventListener("submit", (gebeurtenis) => {
   toonMorgen();
 });
 
-// "Plan vastzetten": het tijdstip bewaren. Dat hebben we later nodig
-// voor de score (vóór 23:00 vastgezet = 20 punten).
+// "Plan vastzetten": eerst om bevestiging vragen in een eigen venster.
+// (confirm() kan dat niet: daar kun je de knopteksten niet zelf kiezen.)
+const vastzetDialoog = document.querySelector("#vastzet-dialoog");
+
 vastzetKnop.addEventListener("click", () => {
+  // Het venster onthoudt de vorige keuze; maak die eerst leeg.
+  // Sluit je het venster met de Escape-toets, dan blijft het leeg.
+  vastzetDialoog.returnValue = "";
+  vastzetDialoog.showModal();
+});
+
+// Het venster gaat dicht: alleen bij "Vastzetten" echt vastzetten
+vastzetDialoog.addEventListener("close", () => {
+  if (vastzetDialoog.returnValue === "vastzetten") {
+    zetPlanVast();
+  }
+});
+
+// Het tijdstip bewaren. Dat hebben we nodig voor de score
+// (vóór 23:00 vastgezet = 20 punten).
+function zetPlanVast() {
   const gegevens = laadGegevens();
   const dag = haalDag(gegevens, datumSleutel(morgen()));
   dag.vastgezetOp = new Date().toISOString();
   bewaarGegevens(gegevens);
   stopBewerken();
   toonMorgen();
-});
+}
 
 // ============================================================
 // Scherm "Vandaag"

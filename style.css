@@ -279,3 +279,37 @@ form button.knop-annuleren {
   font-weight: bold;
   color: #2563eb;
 }
+
+/* ---------- Bevestigingsvenster ---------- */
+
+dialog {
+  width: calc(100% - 32px);
+  max-width: 400px;
+  border: none;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+/* De achtergrond achter het venster donker maken */
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+dialog p {
+  margin: 0 0 16px;
+  font-size: 1rem;
+}
+
+/* Twee knoppen naast elkaar (dit formulier is geen wit kaartje) */
+form.dialoog-knoppen {
+  flex-direction: row;
+  padding: 0;
+}
+
+.dialoog-knoppen button {
+  flex: 1;
+}
+
+form button.knop-vastzetten {
+  background: #16a34a;
+}

@@ -48,6 +48,17 @@
 
       <button id="plan-vastzetten" class="hoofdknop">Plan vastzetten</button>
       <p id="vastgezet-melding" class="melding" hidden></p>
+
+      <!-- Bevestigingsvenster. <dialog> is een ingebouwd HTML-venster.
+           method="dialog" sluit het venster als je op een knop tikt,
+           en onthoudt de "value" van die knop. -->
+      <dialog id="vastzet-dialoog">
+        <p>Weet je het zeker? Na vastzetten kun je het plan niet meer aanpassen.</p>
+        <form method="dialog" class="dialoog-knoppen">
+          <button value="annuleren" class="knop-annuleren">Annuleren</button>
+          <button value="vastzetten" class="knop-vastzetten">Vastzetten</button>
+        </form>
+      </dialog>
     </section>
 
     <!-- Scherm 2: Vandaag -->
