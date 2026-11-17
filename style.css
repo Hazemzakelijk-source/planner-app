@@ -162,6 +162,10 @@ form button,
   font-size: 0.75rem;
 }
 
+.label-belangrijkste {
+  background: #fecaca;
+}
+
 .melding {
   text-align: center;
   color: #16a34a;

@@ -152,6 +152,12 @@ function maakTaakItem(taak) {
   tijd.textContent = `${taak.begintijd}–${eindtijd(taak)}`;
   kop.append(tijd, ` ${taak.naam}`);
 
+  if (taak.belangrijkste) {
+    const label = document.createElement("span");
+    label.className = "label-focus label-belangrijkste";
+    label.textContent = "Belangrijkste";
+    kop.append(label);
+  }
   if (taak.focusblok) {
     const label = document.createElement("span");
     label.className = "label-focus";
@@ -179,12 +185,18 @@ formulier.addEventListener("submit", (gebeurtenis) => {
   const gegevens = laadGegevens();
   const dag = haalDag(gegevens, datumSleutel(morgen()));
 
+  // Maar één belangrijkste taak per dag: haal het label weg bij de andere taken
+  if (velden.belangrijkste.checked) {
+    dag.taken.forEach((taak) => (taak.belangrijkste = false));
+  }
+
   dag.taken.push({
     naam: velden.naam.value.trim(),
     begintijd: velden.begintijd.value,
     duur: Number(velden.duur.value),
     aanpak: velden.aanpak.value.trim(),
     focusblok: velden.focusblok.checked,
+    belangrijkste: velden.belangrijkste.checked,
   });
 
   bewaarGegevens(gegevens);
@@ -292,6 +304,11 @@ function eindeBlok(sleutel, taak) {
   return einde;
 }
 
+// Telt de gewichten van een lijst taken op: belangrijkste = 2, andere = 1
+function totaalGewicht(taken) {
+  return taken.reduce((som, taak) => som + (taak.belangrijkste ? 2 : 1), 0);
+}
+
 // Score van één dag, van 0 tot 100. Een dag zonder taken scoort 0.
 function dagScore(sleutel) {
   const dag = laadGegevens().dagen[sleutel];
@@ -311,15 +328,18 @@ function dagScore(sleutel) {
     }
   }
 
-  const gepland = dag.taken.length;
   const afgerond = dag.taken.filter((taak) => taak.klaarOp);
   const opTijd = afgerond.filter(
     (taak) => new Date(taak.klaarOp) <= eindeBlok(sleutel, taak)
   );
 
+  // De belangrijkste taak telt dubbel: hij weegt 2, een gewone taak 1.
+  // We tellen dus geen taken meer, maar gewichten.
+  const gepland = totaalGewicht(dag.taken);
+
   // 60 x (afgerond / gepland) en 20 x (op tijd afgerond / gepland)
-  punten += (60 * afgerond.length) / gepland;
-  punten += (20 * opTijd.length) / gepland;
+  punten += (60 * totaalGewicht(afgerond)) / gepland;
+  punten += (20 * totaalGewicht(opTijd)) / gepland;
 
   return punten;
 }
