@@ -267,6 +267,94 @@ function zetTijdstip(nummer, veld) {
 }
 
 // ============================================================
+// Score
+// ============================================================
+
+// Zet "2026-11-18" terug om naar een datum (om 00:00 in je eigen tijdzone)
+function datumVanSleutel(sleutel) {
+  const [jaar, maand, dag] = sleutel.split("-").map(Number);
+  return new Date(jaar, maand - 1, dag);
+}
+
+// Een datum een aantal dagen eerder, bijvoorbeeld dagenTerug(vandaag, 1) = gisteren
+function dagenTerug(datum, aantal) {
+  const nieuw = new Date(datum);
+  nieuw.setDate(nieuw.getDate() - aantal);
+  return nieuw;
+}
+
+// Het moment waarop het geplande blok van een taak afloopt
+function eindeBlok(sleutel, taak) {
+  const einde = datumVanSleutel(sleutel);
+  const [uren, minuten] = taak.begintijd.split(":").map(Number);
+  // setHours rekent zelf door: 09:00 + 90 minuten wordt 10:30
+  einde.setHours(uren, minuten + taak.duur);
+  return einde;
+}
+
+// Score van één dag, van 0 tot 100. Een dag zonder taken scoort 0.
+function dagScore(sleutel) {
+  const dag = laadGegevens().dagen[sleutel];
+  if (!dag || dag.taken.length === 0) return 0;
+
+  let punten = 0;
+
+  // 20 punten: plan vastgezet op de avond ervoor, vóór 23:00
+  if (dag.vastgezetOp) {
+    const vastgezet = new Date(dag.vastgezetOp);
+    const avondErvoor = dagenTerug(datumVanSleutel(sleutel), 1);
+    if (
+      datumSleutel(vastgezet) === datumSleutel(avondErvoor) &&
+      vastgezet.getHours() < 23
+    ) {
+      punten += 20;
+    }
+  }
+
+  const gepland = dag.taken.length;
+  const afgerond = dag.taken.filter((taak) => taak.klaarOp);
+  const opTijd = afgerond.filter(
+    (taak) => new Date(taak.klaarOp) <= eindeBlok(sleutel, taak)
+  );
+
+  // 60 x (afgerond / gepland) en 20 x (op tijd afgerond / gepland)
+  punten += (60 * afgerond.length) / gepland;
+  punten += (20 * opTijd.length) / gepland;
+
+  return punten;
+}
+
+// Gemiddelde van vandaag en de 6 dagen ervoor; een dag zonder plan telt als 0
+function weekGemiddelde() {
+  let totaal = 0;
+  for (let i = 0; i < 7; i++) {
+    totaal += dagScore(datumSleutel(dagenTerug(new Date(), i)));
+  }
+  return totaal / 7;
+}
+
+// Telt terug vanaf vandaag zolang elke dag een vastgezet plan heeft
+function reeks() {
+  const dagen = laadGegevens().dagen;
+  let aantal = 0;
+  let datum = new Date();
+  while (dagen[datumSleutel(datum)]?.vastgezetOp) {
+    aantal++;
+    datum = dagenTerug(datum, 1);
+  }
+  return aantal;
+}
+
+function toonScore() {
+  // Math.round rondt af op hele punten, zodat je geen 66.666667 ziet
+  document.querySelector("#score-vandaag").textContent = Math.round(
+    dagScore(datumSleutel(new Date()))
+  );
+  document.querySelector("#score-week").textContent = Math.round(weekGemiddelde());
+  document.querySelector("#score-reeks").textContent = reeks();
+}
+
+// ============================================================
 // Opstarten
 // ============================================================
 
@@ -275,6 +363,7 @@ function zetTijdstip(nummer, veld) {
 function toonAlles() {
   toonMorgen();
   toonVandaag();
+  toonScore();
 }
 
 menuKnoppen.forEach((knop) => knop.addEventListener("click", toonAlles));

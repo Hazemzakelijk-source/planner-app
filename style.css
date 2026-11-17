@@ -234,3 +234,24 @@ form button,
   background: #e5e7eb;
   color: #555;
 }
+
+/* ---------- Scherm "Score" ---------- */
+
+.scorekaart {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.scorekaart p {
+  margin: 0;
+  color: #555;
+}
+
+.scorekaart .getal {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #2563eb;
+}
