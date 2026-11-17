@@ -326,19 +326,14 @@ formulier.addEventListener("submit", (gebeurtenis) => {
 // (confirm() kan dat niet: daar kun je de knopteksten niet zelf kiezen.)
 const vastzetDialoog = document.querySelector("#vastzet-dialoog");
 
-vastzetKnop.addEventListener("click", () => {
-  // Het venster onthoudt de vorige keuze; maak die eerst leeg.
-  // Sluit je het venster met de Escape-toets, dan blijft het leeg.
-  vastzetDialoog.returnValue = "";
-  vastzetDialoog.showModal();
-});
+vastzetKnop.addEventListener("click", () => vastzetDialoog.showModal());
 
-// Het venster gaat dicht: alleen bij "Vastzetten" echt vastzetten
-vastzetDialoog.addEventListener("close", () => {
-  if (vastzetDialoog.returnValue === "vastzetten") {
-    zetPlanVast();
-  }
-});
+// Alleen een tik op "Vastzetten" zet het plan vast. Het venster sluit
+// daarna vanzelf (dat doet method="dialog"). "Annuleren" en de
+// Escape-toets sluiten het venster zonder iets te doen.
+vastzetDialoog
+  .querySelector(".knop-vastzetten")
+  .addEventListener("click", zetPlanVast);
 
 // Het tijdstip bewaren. Dat hebben we nodig voor de score
 // (vóór 23:00 vastgezet = 20 punten).
