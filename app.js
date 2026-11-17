@@ -1,3 +1,7 @@
+// ============================================================
+// Schermen wisselen
+// ============================================================
+
 // Alle menuknoppen en alle schermen opzoeken in de HTML
 const menuKnoppen = document.querySelectorAll(".menu button");
 const schermen = document.querySelectorAll(".scherm");
@@ -18,3 +22,165 @@ function toonScherm(schermId) {
 menuKnoppen.forEach((knop) => {
   knop.addEventListener("click", () => toonScherm(knop.dataset.scherm));
 });
+
+// ============================================================
+// Opslag op het apparaat (localStorage)
+// ============================================================
+//
+// Alles staat onder één sleutel, als tekst in JSON-vorm:
+// {
+//   dagen: {
+//     "2026-11-18": {
+//       vastgezetOp: "2026-11-17T21:30:00.000Z",   (of null)
+//       taken: [ { naam, begintijd, duur, aanpak, focusblok }, ... ]
+//     }
+//   }
+// }
+
+const OPSLAG_SLEUTEL = "dagplanner";
+
+function laadGegevens() {
+  const tekst = localStorage.getItem(OPSLAG_SLEUTEL);
+  // Nog niets bewaard? Begin dan met een lege lijst dagen.
+  return tekst ? JSON.parse(tekst) : { dagen: {} };
+}
+
+function bewaarGegevens(gegevens) {
+  localStorage.setItem(OPSLAG_SLEUTEL, JSON.stringify(gegevens));
+}
+
+// Geeft de dag die bij een datum hoort; maakt hem aan als hij nog niet bestaat
+function haalDag(gegevens, sleutel) {
+  if (!gegevens.dagen[sleutel]) {
+    gegevens.dagen[sleutel] = { vastgezetOp: null, taken: [] };
+  }
+  return gegevens.dagen[sleutel];
+}
+
+// ============================================================
+// Datums
+// ============================================================
+
+// Zet een datum om naar tekst als "2026-11-18" (in je eigen tijdzone)
+function datumSleutel(datum) {
+  const jaar = datum.getFullYear();
+  const maand = String(datum.getMonth() + 1).padStart(2, "0");
+  const dag = String(datum.getDate()).padStart(2, "0");
+  return `${jaar}-${maand}-${dag}`;
+}
+
+function morgen() {
+  const datum = new Date();
+  datum.setDate(datum.getDate() + 1);
+  return datum;
+}
+
+// ============================================================
+// Scherm "Morgen plannen"
+// ============================================================
+
+const formulier = document.querySelector("#taak-formulier");
+const takenLijst = document.querySelector("#taken-morgen");
+const vastzetKnop = document.querySelector("#plan-vastzetten");
+const vastgezetMelding = document.querySelector("#vastgezet-melding");
+const morgenDatum = document.querySelector("#morgen-datum");
+
+// Maakt het hele scherm opnieuw op basis van wat er bewaard is
+function toonMorgen() {
+  const gegevens = laadGegevens();
+  const dag = haalDag(gegevens, datumSleutel(morgen()));
+
+  morgenDatum.textContent = morgen().toLocaleDateString("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
+  // Lijst leegmaken en opnieuw vullen, gesorteerd op begintijd
+  takenLijst.innerHTML = "";
+  const gesorteerd = [...dag.taken].sort((a, b) =>
+    a.begintijd.localeCompare(b.begintijd)
+  );
+  gesorteerd.forEach((taak) => takenLijst.append(maakTaakItem(taak)));
+
+  // Is het plan al vastgezet? Dan kan er niets meer bij.
+  const isVast = dag.vastgezetOp !== null;
+  formulier.hidden = isVast;
+  vastzetKnop.hidden = isVast;
+  vastgezetMelding.hidden = !isVast;
+  if (isVast) {
+    const tijd = new Date(dag.vastgezetOp).toLocaleTimeString("nl-NL", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    vastgezetMelding.textContent = `Plan vastgezet om ${tijd}`;
+  }
+
+  // Een leeg plan vastzetten heeft geen zin
+  vastzetKnop.disabled = dag.taken.length === 0;
+}
+
+// Maakt één <li> voor een taak.
+// We gebruiken textContent (niet innerHTML) zodat getypte tekst
+// altijd als gewone tekst wordt getoond en nooit als HTML-code.
+function maakTaakItem(taak) {
+  const item = document.createElement("li");
+
+  const kop = document.createElement("div");
+  const tijd = document.createElement("span");
+  tijd.className = "tijd";
+  tijd.textContent = `${taak.begintijd} · ${taak.duur} min`;
+  kop.append(tijd, ` ${taak.naam}`);
+
+  if (taak.focusblok) {
+    const label = document.createElement("span");
+    label.className = "label-focus";
+    label.textContent = "Focusblok";
+    kop.append(label);
+  }
+  item.append(kop);
+
+  if (taak.aanpak) {
+    const aanpak = document.createElement("p");
+    aanpak.className = "aanpak";
+    aanpak.textContent = taak.aanpak;
+    item.append(aanpak);
+  }
+
+  return item;
+}
+
+// Formulier verstuurd: taak toevoegen en bewaren
+formulier.addEventListener("submit", (gebeurtenis) => {
+  // Standaard herlaadt een formulier de pagina; dat willen we niet
+  gebeurtenis.preventDefault();
+
+  const velden = formulier.elements;
+  const gegevens = laadGegevens();
+  const dag = haalDag(gegevens, datumSleutel(morgen()));
+
+  dag.taken.push({
+    naam: velden.naam.value.trim(),
+    begintijd: velden.begintijd.value,
+    duur: Number(velden.duur.value),
+    aanpak: velden.aanpak.value.trim(),
+    focusblok: velden.focusblok.checked,
+  });
+
+  bewaarGegevens(gegevens);
+  formulier.reset();
+  toonMorgen();
+});
+
+// "Plan vastzetten": het tijdstip bewaren. Dat hebben we later nodig
+// voor de score (vóór 23:00 vastgezet = 20 punten).
+vastzetKnop.addEventListener("click", () => {
+  const gegevens = laadGegevens();
+  const dag = haalDag(gegevens, datumSleutel(morgen()));
+  dag.vastgezetOp = new Date().toISOString();
+  bewaarGegevens(gegevens);
+  toonMorgen();
+});
+
+// Bij het openen van de app meteen het scherm vullen
+toonMorgen();

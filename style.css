@@ -3,6 +3,11 @@
   box-sizing: border-box;
 }
 
+/* Verborgen is altijd verborgen, ook als een andere regel "display" zet */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
@@ -43,5 +48,122 @@ h1 {
 
 .menu button.actief {
   color: #2563eb;
+  font-weight: bold;
+}
+
+/* ---------- Scherm "Morgen plannen" ---------- */
+
+.datum {
+  margin-top: -8px;
+  color: #666;
+}
+
+/* Formulier als een wit kaartje; velden onder elkaar */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+/* Begintijd en duur naast elkaar */
+.rij {
+  display: flex;
+  gap: 12px;
+}
+
+.rij label {
+  flex: 1;
+}
+
+/* Lettergrootte 16px voorkomt dat iPhones inzoomen bij het typen */
+input[type="text"],
+input[type="time"],
+input[type="number"] {
+  font-size: 16px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.vinkje {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.vinkje input {
+  width: 20px;
+  height: 20px;
+}
+
+/* Grote knoppen: makkelijk te raken met een vinger */
+form button,
+.hoofdknop {
+  font-size: 1rem;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+}
+
+.hoofdknop {
+  width: 100%;
+  margin-top: 16px;
+  background: #16a34a;
+}
+
+.hoofdknop:disabled {
+  background: #aaa;
+}
+
+/* Lijst met taken */
+.takenlijst {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+
+.takenlijst li {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+
+.tijd {
+  font-weight: bold;
+}
+
+.aanpak {
+  margin: 4px 0 0;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.label-focus {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fde68a;
+  font-size: 0.75rem;
+}
+
+.melding {
+  text-align: center;
+  color: #16a34a;
   font-weight: bold;
 }

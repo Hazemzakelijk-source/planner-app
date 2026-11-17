@@ -12,6 +12,35 @@
     <!-- Scherm 1: Morgen plannen -->
     <section id="scherm-morgen" class="scherm">
       <h1>Morgen plannen</h1>
+      <p id="morgen-datum" class="datum"></p>
+
+      <!-- Formulier om één taak toe te voegen. "required" = verplicht veld -->
+      <form id="taak-formulier">
+        <label>Taak
+          <input name="naam" type="text" required>
+        </label>
+        <div class="rij">
+          <label>Begintijd
+            <input name="begintijd" type="time" required>
+          </label>
+          <label>Duur (minuten)
+            <input name="duur" type="number" min="1" inputmode="numeric" required>
+          </label>
+        </div>
+        <label>Hoe pak ik het aan?
+          <input name="aanpak" type="text">
+        </label>
+        <label class="vinkje">
+          <input name="focusblok" type="checkbox"> Focusblok
+        </label>
+        <button type="submit">Taak toevoegen</button>
+      </form>
+
+      <!-- Hier zet JavaScript de lijst met taken neer -->
+      <ul id="taken-morgen" class="takenlijst"></ul>
+
+      <button id="plan-vastzetten" class="hoofdknop">Plan vastzetten</button>
+      <p id="vastgezet-melding" class="melding" hidden></p>
     </section>
 
     <!-- Scherm 2: Vandaag -->
