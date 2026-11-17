@@ -411,6 +411,11 @@ function toonVandaag() {
     // Een afgevinkte taak hoeft niet meer gestart te worden
     if (!taak.klaarOp) item.append(knoppen);
 
+    // Focustimer bij een focusblok dat nog niet is afgevinkt
+    if (taak.focusblok && !taak.klaarOp) {
+      item.append(maakFocustimer(taak, nummer));
+    }
+
     // Na het afvinken: een veld voor een korte notitie
     if (taak.klaarOp) {
       const notitie = document.createElement("input");
@@ -450,6 +455,73 @@ function zetTijdstip(nummer, veld) {
   bewaarGegevens(gegevens);
   toonVandaag();
 }
+
+// ---------- Focustimer ----------
+//
+// We bewaren het moment waarop de timer afloopt ("timerEindOp").
+// De resterende tijd is steeds: dat moment min nu. Daardoor klopt de
+// timer ook als je de app tussendoor sluit.
+
+function maakFocustimer(taak, nummer) {
+  const blok = document.createElement("div");
+  blok.className = "focustimer";
+
+  if (taak.timerEindOp) {
+    const tijd = document.createElement("span");
+    tijd.className = "timer";
+    tijd.dataset.eind = taak.timerEindOp;
+    tijd.textContent = resterendeTijd(taak.timerEindOp);
+
+    const stopKnop = document.createElement("button");
+    stopKnop.textContent = "Stop";
+    stopKnop.addEventListener("click", () => stopTimer(nummer));
+
+    blok.append(tijd, stopKnop);
+  } else {
+    const startKnop = document.createElement("button");
+    startKnop.textContent = `Start focustimer (${taak.duur} min)`;
+    startKnop.addEventListener("click", () => startTimer(nummer));
+    blok.append(startKnop);
+  }
+  return blok;
+}
+
+function startTimer(nummer) {
+  const gegevens = laadGegevens();
+  const taak = gegevens.dagen[datumSleutel(new Date())].taken[nummer];
+  // Nu + de geplande duur in milliseconden (1 minuut = 60.000 ms)
+  taak.timerEindOp = new Date(Date.now() + taak.duur * 60000).toISOString();
+  // Wie de timer start, is met de taak begonnen
+  if (!taak.gestartOp) taak.gestartOp = new Date().toISOString();
+  bewaarGegevens(gegevens);
+  toonVandaag();
+}
+
+function stopTimer(nummer) {
+  const gegevens = laadGegevens();
+  delete gegevens.dagen[datumSleutel(new Date())].taken[nummer].timerEindOp;
+  bewaarGegevens(gegevens);
+  toonVandaag();
+}
+
+// Resterende tijd als "24:59", of een melding als de tijd om is
+function resterendeTijd(eindOp) {
+  const seconden = Math.ceil((new Date(eindOp) - Date.now()) / 1000);
+  if (seconden <= 0) return "Focustijd voorbij";
+  const minuten = Math.floor(seconden / 60);
+  const rest = seconden % 60;
+  return `${minuten}:${String(rest).padStart(2, "0")}`;
+}
+
+// Elke seconde alle zichtbare timers bijwerken
+function werkTimersBij() {
+  document.querySelectorAll(".timer").forEach((tijd) => {
+    tijd.textContent = resterendeTijd(tijd.dataset.eind);
+  });
+}
+setInterval(werkTimersBij, 1000);
+// Kom je terug in de app, dan meteen bijwerken (niet pas na een seconde)
+document.addEventListener("visibilitychange", werkTimersBij);
 
 // ---------- Terugblik ----------
 

@@ -377,3 +377,29 @@ textarea {
   width: 100%;
   resize: vertical;
 }
+
+/* Focustimer */
+.focustimer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.focustimer button {
+  flex: 1;
+  font-size: 1rem;
+  padding: 12px;
+  border: 2px solid #ca8a04;
+  border-radius: 8px;
+  background: #fff;
+  color: #854d0e;
+}
+
+.timer {
+  flex: 1;
+  font-size: 1.8rem;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums; /* cijfers even breed: de tijd springt niet */
+  color: #854d0e;
+}
