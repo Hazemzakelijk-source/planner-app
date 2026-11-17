@@ -239,8 +239,38 @@ h2 {
   background: #16a34a;
 }
 
-.tijdlijn li.klaar {
-  opacity: 0.7;
+/* Afgeronde taak: doorgestreept en grijs */
+.tijdlijn li.klaar .taak-kop,
+.tijdlijn li.klaar .aanpak {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+/* Ruimte rechts voor het ronde vinkje */
+.tijdlijn li {
+  padding-right: 60px;
+}
+
+/* Het ronde vinkje: een cirkel met alleen een rand, of groen met ✓ */
+.vinkje-rond {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #9ca3af;
+  background: #fff;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: bold;
+  line-height: 1;
+  padding: 0;
+}
+
+.tijdlijn li.klaar .vinkje-rond {
+  border-color: #16a34a;
+  background: #16a34a;
 }
 
 .knoppen {
@@ -257,10 +287,6 @@ h2 {
   border-radius: 8px;
   background: #2563eb;
   color: #fff;
-}
-
-.knoppen button.knop-klaar {
-  background: #16a34a;
 }
 
 .knoppen button:disabled {

@@ -214,6 +214,7 @@ function maakTaakItem(taak) {
   const item = document.createElement("li");
 
   const kop = document.createElement("div");
+  kop.className = "taak-kop";
   const tijd = document.createElement("span");
   tijd.className = "tijd";
   tijd.textContent = `${taak.begintijd}–${eindtijd(taak)}`;
@@ -387,6 +388,15 @@ function toonVandaag() {
     if (taak.klaarOp) item.classList.add("klaar");
     else if (taak.gestartOp) item.classList.add("bezig");
 
+    // Rond vinkje rechtsboven. aria-label is de tekst die een
+    // schermlezer voorleest, omdat het rondje zelf geen tekst heeft.
+    const vinkje = document.createElement("button");
+    vinkje.className = "vinkje-rond";
+    vinkje.textContent = taak.klaarOp ? "✓" : "";
+    vinkje.setAttribute("aria-label", taak.klaarOp ? "Afvinken ongedaan maken" : "Afvinken");
+    vinkje.addEventListener("click", () => wisselKlaar(nummer));
+    item.prepend(vinkje);
+
     const knoppen = document.createElement("div");
     knoppen.className = "knoppen";
 
@@ -397,23 +407,23 @@ function toonVandaag() {
     startKnop.disabled = Boolean(taak.gestartOp);
     startKnop.addEventListener("click", () => zetTijdstip(nummer, "gestartOp"));
 
-    const klaarKnop = document.createElement("button");
-    klaarKnop.className = "knop-klaar";
-    klaarKnop.textContent = taak.klaarOp
-      ? `Klaar ${tijdTekst(new Date(taak.klaarOp))}`
-      : "Klaar";
-    // Klaar kan pas als de taak gestart is, en maar één keer
-    klaarKnop.disabled = !taak.gestartOp || Boolean(taak.klaarOp);
-    klaarKnop.addEventListener("click", () => zetTijdstip(nummer, "klaarOp"));
-
-    knoppen.append(startKnop, klaarKnop);
-    item.append(knoppen);
+    knoppen.append(startKnop);
+    // Een afgevinkte taak hoeft niet meer gestart te worden
+    if (!taak.klaarOp) item.append(knoppen);
     tijdlijn.append(item);
   });
 }
 
-// Bewaart het huidige tijdstip bij een taak van vandaag,
-// als "gestartOp" of als "klaarOp"
+// Vinkje aantikken: afgerond (tijdstip bewaren) of weer open (tijdstip wissen)
+function wisselKlaar(nummer) {
+  const gegevens = laadGegevens();
+  const taak = gegevens.dagen[datumSleutel(new Date())].taken[nummer];
+  taak.klaarOp = taak.klaarOp ? null : new Date().toISOString();
+  bewaarGegevens(gegevens);
+  toonVandaag();
+}
+
+// Bewaart het huidige tijdstip bij een taak van vandaag (hier: "gestartOp")
 function zetTijdstip(nummer, veld) {
   const gegevens = laadGegevens();
   const dag = gegevens.dagen[datumSleutel(new Date())];
