@@ -324,10 +324,12 @@ function dagScore(sleutel) {
   return punten;
 }
 
-// Gemiddelde van vandaag en de 6 dagen ervoor; een dag zonder plan telt als 0
+// Gemiddelde van de 7 dagen vóór vandaag (gisteren t/m 7 dagen terug).
+// Vandaag telt niet mee, want die dag is nog niet voorbij.
+// Een dag zonder plan telt als 0.
 function weekGemiddelde() {
   let totaal = 0;
-  for (let i = 0; i < 7; i++) {
+  for (let i = 1; i <= 7; i++) {
     totaal += dagScore(datumSleutel(dagenTerug(new Date(), i)));
   }
   return totaal / 7;
