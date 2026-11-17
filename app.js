@@ -410,6 +410,18 @@ function toonVandaag() {
     knoppen.append(startKnop);
     // Een afgevinkte taak hoeft niet meer gestart te worden
     if (!taak.klaarOp) item.append(knoppen);
+
+    // Na het afvinken: een veld voor een korte notitie
+    if (taak.klaarOp) {
+      const notitie = document.createElement("input");
+      notitie.type = "text";
+      notitie.className = "notitie";
+      notitie.placeholder = "Notitie: hoe ging het?";
+      notitie.value = taak.notitie || "";
+      notitie.addEventListener("change", () => bewaarNotitie(nummer, notitie.value));
+      item.append(notitie);
+    }
+
     tijdlijn.append(item);
   });
 }
@@ -421,6 +433,13 @@ function wisselKlaar(nummer) {
   taak.klaarOp = taak.klaarOp ? null : new Date().toISOString();
   bewaarGegevens(gegevens);
   toonVandaag();
+}
+
+// Bewaart de notitie bij een taak van vandaag
+function bewaarNotitie(nummer, tekst) {
+  const gegevens = laadGegevens();
+  gegevens.dagen[datumSleutel(new Date())].taken[nummer].notitie = tekst.trim();
+  bewaarGegevens(gegevens);
 }
 
 // Bewaart het huidige tijdstip bij een taak van vandaag (hier: "gestartOp")
