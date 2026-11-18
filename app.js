@@ -48,6 +48,7 @@ function laadGegevens() {
 
 function bewaarGegevens(gegevens) {
   localStorage.setItem(OPSLAG_SLEUTEL, JSON.stringify(gegevens));
+  planSync(); // ben je ingelogd? Dan gaat de wijziging straks ook naar Supabase
 }
 
 // Geeft de dag die bij een datum hoort; maakt hem aan als hij nog niet bestaat
@@ -865,15 +866,125 @@ document.querySelector("#uitlog-knop").addEventListener("click", async () => {
   await db.auth.signOut();
 });
 
+// ============================================================
+// Synchroniseren met Supabase
+// ============================================================
+//
+// De app bewaart alles nog steeds op het apparaat (localStorage).
+// Ben je ingelogd, dan gaat elke wijziging ook naar Supabase,
+// en bij het opstarten halen we de online versie op.
+
+// Twee extra notities op het apparaat:
+const SYNC_GEBRUIKER = "dagplanner-gebruiker"; // welk account hier al eens is gesynchroniseerd
+const SYNC_WACHT = "dagplanner-wacht"; // "ja" = er zijn wijzigingen die nog niet online staan
+
+let gebruiker = null; // de ingelogde gebruiker, of null
+let syncTimer = null;
+let wijzigingNummer = 0;
+
+function zetSyncStatus(tekst) {
+  const status = document.querySelector("#sync-status");
+  status.textContent = tekst;
+  status.hidden = !tekst;
+}
+
+// Na een wijziging: wacht 1 seconde en stuur dan alles in één keer.
+// Typ je een notitie, dan sturen we dus niet bij elke letter.
+function planSync() {
+  if (!gebruiker) return;
+  wijzigingNummer++;
+  localStorage.setItem(SYNC_WACHT, "ja");
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(stuurNaarServer, 1000);
+}
+
+// Alle gegevens en alle dagscores naar Supabase sturen.
+// upsert = toevoegen als de rij nog niet bestaat, anders bijwerken.
+async function stuurNaarServer() {
+  if (!gebruiker) return;
+  const nummer = wijzigingNummer;
+  const gegevens = laadGegevens();
+  const scores = Object.keys(gegevens.dagen).map((datum) => ({
+    user_id: gebruiker.id,
+    datum,
+    score: Math.round(dagScore(datum)),
+  }));
+
+  const planner = await db.from("planners").upsert({
+    user_id: gebruiker.id,
+    gegevens,
+    bijgewerkt_op: new Date().toISOString(),
+  });
+  const dagscores = scores.length
+    ? await db.from("dagscores").upsert(scores)
+    : { error: null };
+
+  if (planner.error || dagscores.error) {
+    zetSyncStatus("⚠️ Niet opgeslagen");
+    return;
+  }
+  // Alleen "klaar" als er intussen geen nieuwe wijziging is bijgekomen
+  if (nummer === wijzigingNummer) localStorage.removeItem(SYNC_WACHT);
+  zetSyncStatus("");
+}
+
+// De online versie ophalen en op dit apparaat zetten
+async function haalVanServer() {
+  if (!gebruiker) return;
+
+  // Staan er nog eigen wijzigingen klaar? Die eerst versturen, anders raken ze kwijt.
+  if (localStorage.getItem(SYNC_WACHT)) {
+    await stuurNaarServer();
+    return;
+  }
+
+  // maybeSingle: we verwachten één rij, of geen (bij de eerste keer)
+  const { data, error } = await db
+    .from("planners")
+    .select("gegevens")
+    .eq("user_id", gebruiker.id)
+    .maybeSingle();
+  if (error) {
+    zetSyncStatus("⚠️ Niet bijgewerkt");
+    return;
+  }
+
+  if (!data) {
+    // Nog niets online: alles van dit apparaat gaat omhoog
+    localStorage.setItem(SYNC_WACHT, "ja");
+    await stuurNaarServer();
+  } else {
+    localStorage.setItem(OPSLAG_SLEUTEL, JSON.stringify(data.gegevens));
+  }
+  localStorage.setItem(SYNC_GEBRUIKER, gebruiker.id);
+  zetSyncStatus("");
+  toonAlles();
+}
+
+// Kom je terug in de app (bijvoorbeeld na je laptop te hebben gebruikt)?
+// Dan halen we de nieuwste versie op.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") haalVanServer();
+});
+
 // Supabase laat ons weten als je in- of uitlogt (ook bij het opstarten).
-// Dan passen we de accountbalk aan.
 db.auth.onAuthStateChange((gebeurtenis, sessie) => {
-  const ingelogd = Boolean(sessie);
+  gebruiker = sessie ? sessie.user : null;
+  const ingelogd = Boolean(gebruiker);
   document.querySelector("#account-tekst").textContent = ingelogd
-    ? `☁️ ${sessie.user.email}`
+    ? `☁️ ${gebruiker.email}`
     : "Niet ingelogd";
   document.querySelector("#inlog-knop").hidden = ingelogd;
   document.querySelector("#uitlog-knop").hidden = !ingelogd;
+
+  if (!ingelogd) {
+    clearTimeout(syncTimer);
+    zetSyncStatus("");
+  }
+  if (ingelogd && (gebeurtenis === "SIGNED_IN" || gebeurtenis === "INITIAL_SESSION")) {
+    // setTimeout: Supabase raadt aan om hier niet direct te wachten op een andere Supabase-vraag
+    setTimeout(haalVanServer, 0);
+  }
 });
 
 // ============================================================

@@ -452,9 +452,17 @@ form.dialoog-knoppen {
 
 /* Lange e-mailadressen afkappen met ... in plaats van de balk breder te maken */
 #account-tekst {
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Waarschuwing als synchroniseren niet lukt */
+.sync-status {
+  flex-shrink: 0;
+  color: var(--roze-donker);
+  font-weight: 500;
 }
 
 .kleine-knop {
