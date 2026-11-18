@@ -12,9 +12,11 @@ function toonScherm(schermId) {
     scherm.hidden = scherm.id !== schermId;
   });
 
-  // De knop van het getoonde scherm krijgt de klasse "actief" (blauw)
+  // De knop van het getoonde scherm krijgt de klasse "actief" (blauw).
+  // Terugkijken hoort bij Disciplinescore, dus dan blijft die knop actief.
+  const menuScherm = schermId === "scherm-terug" ? "scherm-score" : schermId;
   menuKnoppen.forEach((knop) => {
-    knop.classList.toggle("actief", knop.dataset.scherm === schermId);
+    knop.classList.toggle("actief", knop.dataset.scherm === menuScherm);
   });
 }
 
@@ -821,6 +823,174 @@ function toonScore() {
 }
 
 // ============================================================
+// Terugkijken naar eerdere dagen
+// ============================================================
+
+// Een eerdere dag bekijken: taken, notities, terugblik en score.
+// Alleen lezen: op een oude dag kun je niets afvinken of veranderen,
+// zodat de score eerlijk blijft.
+
+// De dag die nu getoond wordt, als "2026-10-15"
+let terugDag = null;
+
+const terugDatumVeld = document.querySelector("#terug-datum");
+const dagEerderKnop = document.querySelector("#dag-eerder");
+const dagLaterKnop = document.querySelector("#dag-later");
+
+// Je kunt kijken tot en met gisteren; vandaag staat op het scherm Vandaag.
+// De eerste dag is de oudste dag met gegevens.
+function terugGrenzen() {
+  const laatste = datumSleutel(dagenTerug(new Date(), 1));
+  // Datumsleutels "JJJJ-MM-DD" kun je gewoon als tekst sorteren
+  const eerdere = Object.keys(laadGegevens().dagen).filter((sleutel) => sleutel <= laatste).sort();
+  return { eerste: eerdere[0] || laatste, laatste };
+}
+
+// Het scherm openen, op een bepaalde dag (standaard: gisteren)
+function openTerugkijken(sleutel) {
+  terugDag = sleutel || datumSleutel(dagenTerug(new Date(), 1));
+  toonScherm("scherm-terug");
+  toonTerugkijken();
+  window.scrollTo(0, 0);
+}
+
+// Een punt als "13", zonder komma's (zoals elders in de app)
+function punten(getal) {
+  return Math.round(getal);
+}
+
+// Eén regel van de score-opbouw: tekst links, punten rechts
+function opbouwRegel(tekst, behaald, maximaal) {
+  const regel = document.createElement("li");
+  const uitleg = document.createElement("span");
+  uitleg.textContent = tekst;
+  const score = document.createElement("span");
+  score.className = "punten";
+  score.textContent = `${punten(behaald)} / ${maximaal}`;
+  regel.append(uitleg, score);
+  return regel;
+}
+
+function toonTerugkijken() {
+  if (!terugDag) return;
+
+  // Binnen de grenzen blijven, bijvoorbeeld als het intussen middernacht werd
+  const { eerste, laatste } = terugGrenzen();
+  if (terugDag > laatste) terugDag = laatste;
+  if (terugDag < eerste) terugDag = eerste;
+
+  terugDatumVeld.min = eerste;
+  terugDatumVeld.max = laatste;
+  terugDatumVeld.value = terugDag;
+  dagEerderKnop.disabled = terugDag <= eerste;
+  dagLaterKnop.disabled = terugDag >= laatste;
+  // Met jaartal, want je kunt ook ver terugkijken
+  document.querySelector("#terug-datumtekst").textContent = datumVanSleutel(terugDag)
+    .toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  const dag = laadGegevens().dagen[terugDag];
+  const taken = dag ? dag.taken : [];
+  const opbouw = dagScoreOpbouw(terugDag);
+
+  document.querySelector("#terug-geen-plan").hidden = taken.length > 0;
+
+  // Score en opbouw. Alleen tonen als er taken waren.
+  const scorekaart = document.querySelector("#terug-scorekaart");
+  const lijst = document.querySelector("#terug-opbouw");
+  scorekaart.hidden = taken.length === 0;
+  lijst.innerHTML = "";
+  document.querySelector("#terug-score").textContent = punten(dagScore(terugDag));
+  if (opbouw) {
+    lijst.append(
+      opbouwRegel(
+        opbouw.vastgezet ? "📌 Plan op tijd vastgezet" : "📌 Plan niet op tijd vastgezet",
+        opbouw.vastgezet, 20
+      ),
+      opbouwRegel(`✅ Afgerond: ${opbouw.aantalAfgerond} van ${opbouw.aantalGepland}`, opbouw.afgerond, 60),
+      opbouwRegel(`⏰ Op tijd: ${opbouw.aantalOpTijd} van ${opbouw.aantalGepland}`, opbouw.opTijd, 20)
+    );
+  } else if (taken.length > 0) {
+    // Alleen extra taken: die tellen niet mee
+    const regel = document.createElement("li");
+    regel.textContent = "Alleen extra taken; die tellen niet mee.";
+    lijst.append(regel);
+  }
+
+  // De taken, op volgorde van begintijd
+  const tijdlijnTerug = document.querySelector("#terug-tijdlijn");
+  tijdlijnTerug.innerHTML = "";
+  [...taken]
+    .sort((a, b) => a.begintijd.localeCompare(b.begintijd))
+    .forEach((taak) => tijdlijnTerug.append(maakTerugItem(taak)));
+
+  // De terugblik van die avond
+  const terugblik = dag?.terugblik?.trim() || "";
+  document.querySelector("#terug-terugblik-kaart").hidden = terugblik === "";
+  document.querySelector("#terug-terugblik").textContent = terugblik;
+}
+
+// Eén taak van een eerdere dag: zoals op Vandaag, maar zonder knoppen
+function maakTerugItem(taak) {
+  const item = maakTaakItem(taak);
+  if (taak.klaarOp) item.classList.add("klaar");
+
+  // Rond vinkje rechtsboven, maar als plaatje en niet als knop
+  const vinkje = document.createElement("span");
+  vinkje.className = "vinkje-rond";
+  vinkje.setAttribute("role", "img");
+  vinkje.setAttribute("aria-label", taak.klaarOp ? "Afgerond" : "Niet afgerond");
+  vinkje.textContent = taak.klaarOp ? "✓" : "";
+  item.prepend(vinkje);
+
+  // Wanneer gestart en wanneer klaar
+  const delen = [];
+  if (taak.gestartOp) delen.push(`Gestart ${tijdTekst(new Date(taak.gestartOp))}`);
+  if (taak.klaarOp) {
+    let klaar = `Klaar ${tijdTekst(new Date(taak.klaarOp))}`;
+    // Op tijd of te laat (extra taken tellen niet mee, dus daar niet)
+    if (!taak.extra) {
+      klaar += new Date(taak.klaarOp) <= eindeBlok(terugDag, taak) ? " · op tijd" : " · te laat";
+    }
+    delen.push(klaar);
+  } else {
+    delen.push("Niet afgerond");
+  }
+  const status = document.createElement("p");
+  status.className = "taak-status";
+  status.textContent = delen.join(" · ");
+  item.append(status);
+
+  if (taak.notitie) {
+    const notitie = document.createElement("p");
+    notitie.className = "taak-notitie";
+    notitie.textContent = `📝 ${taak.notitie}`;
+    item.append(notitie);
+  }
+
+  return item;
+}
+
+// Een aantal dagen verder of terug (−1 = eerder, +1 = later)
+function schuifTerugDag(aantal) {
+  terugDag = datumSleutel(dagenTerug(datumVanSleutel(terugDag), -aantal));
+  toonTerugkijken();
+}
+
+document.querySelector("#naar-terugkijken").addEventListener("click", () => openTerugkijken());
+document.querySelector("#terug-naar-score").addEventListener("click", () => {
+  toonScherm("scherm-score");
+  window.scrollTo(0, 0);
+});
+dagEerderKnop.addEventListener("click", () => schuifTerugDag(-1));
+dagLaterKnop.addEventListener("click", () => schuifTerugDag(1));
+
+// Een dag gekozen in de datumkiezer. Leeg (gewist)? Dan blijft de dag staan.
+terugDatumVeld.addEventListener("change", () => {
+  if (terugDatumVeld.value) terugDag = terugDatumVeld.value;
+  toonTerugkijken();
+});
+
+// ============================================================
 // Inloggen met een code van 6 cijfers per e-mail
 // ============================================================
 //
@@ -1409,6 +1579,7 @@ function toonAlles() {
   toonVandaag();
   toonTerugblik();
   toonScore();
+  toonTerugkijken();
   toonInstellingen();
   // Thema opnieuw toepassen: misschien is het via een ander apparaat veranderd
   pasThemaToe(laadGegevens().instellingen || {});

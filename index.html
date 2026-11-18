@@ -176,6 +176,40 @@
         <p id="score-reeks" class="getal"></p>
         <p>Dagen achter elkaar gepland</p>
       </div>
+
+      <button id="naar-terugkijken" class="hoofdknop knop-rustig"><span aria-hidden="true">📅</span> Eerdere dagen bekijken</button>
+    </section>
+
+    <!-- Scherm Terugkijken: een eerdere dag bekijken, alleen lezen.
+         Te openen vanaf Disciplinescore; staat niet in het menu. -->
+    <section id="scherm-terug" class="scherm" hidden>
+      <button id="terug-naar-score" class="terugknop">‹ Disciplinescore</button>
+      <h1><span aria-hidden="true">📅</span> Terugkijken</h1>
+
+      <!-- Een dag eerder, een dag kiezen, een dag later -->
+      <div class="dagkiezer">
+        <button id="dag-eerder" aria-label="Een dag eerder">◀</button>
+        <input id="terug-datum" type="date" aria-label="Kies een dag">
+        <button id="dag-later" aria-label="Een dag later">▶</button>
+      </div>
+      <p id="terug-datumtekst" class="datum"></p>
+
+      <p id="terug-geen-plan" class="kaart" hidden><span aria-hidden="true">🌱</span> Voor deze dag was er geen plan.</p>
+
+      <!-- Score van die dag, met de opbouw -->
+      <div id="terug-scorekaart" class="scorekaart">
+        <p id="terug-score" class="getal"></p>
+        <p>Score van deze dag (max. 100)</p>
+        <ul id="terug-opbouw" class="opbouw"></ul>
+      </div>
+
+      <!-- Hier zet JavaScript de taken van die dag neer -->
+      <ol id="terug-tijdlijn" class="tijdlijn tijdlijn-terug"></ol>
+
+      <div id="terug-terugblik-kaart" class="kaart" hidden>
+        <p class="kaarttitel"><span aria-hidden="true">🌙</span> Terugblik</p>
+        <p id="terug-terugblik" class="terugblik-tekst"></p>
+      </div>
     </section>
     <!-- Scherm 4: Instellingen (te openen met het tandwieltje) -->
     <section id="scherm-instellingen" class="scherm" hidden>

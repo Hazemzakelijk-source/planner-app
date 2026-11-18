@@ -258,6 +258,7 @@ input[type="text"],
 input[type="email"],
 input[type="time"],
 input[type="number"],
+input[type="date"],
 textarea {
   font-family: inherit;
   font-size: 16px;
@@ -852,4 +853,111 @@ form.dialoog-formulier {
 .grafiek-uitleg {
   margin-top: 12px !important;
   font-size: 0.85rem;
+}
+
+/* ---------- Terugkijken ---------- */
+
+/* Klein knopje bovenaan om terug te gaan naar Disciplinescore */
+.terugknop {
+  border: none;
+  background: none;
+  padding: 8px 0;
+  font-size: 1rem;
+  color: var(--accent-donker);
+}
+
+/* ◀ [datum] ▶ naast elkaar; het datumveld vult de ruimte ertussen */
+.dagkiezer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dagkiezer button {
+  width: 48px;
+  height: 44px;
+  flex: none;
+  border: none;
+  border-radius: var(--rond-knop);
+  background: var(--accent-licht);
+  color: var(--accent-donker);
+  font-size: 1rem;
+}
+
+.dagkiezer button:disabled {
+  background: var(--rand);
+  color: var(--tekst-vaag);
+}
+
+.dagkiezer input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Opbouw van de score: drie regels onder het getal */
+.opbouw {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--tekst-zacht);
+}
+
+.opbouw li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--rand);
+}
+
+.opbouw .punten {
+  font-weight: 600;
+  color: var(--tekst);
+  white-space: nowrap;
+}
+
+/* Regel onder een taak: wanneer gestart en klaar, en de notitie */
+.taak-status,
+.taak-notitie {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  color: var(--tekst-zacht);
+}
+
+.taak-notitie {
+  font-style: italic;
+}
+
+/* De terugblik als gewone tekst; witregels uit het tekstvak blijven staan */
+.terugblik-tekst {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.kaart .kaarttitel {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+/* Het vinkje op Terugkijken is geen knop maar een plaatje: ✓ in het midden */
+span.vinkje-rond {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Op Terugkijken niet doorstrepen: het vinkje laat al zien wat af is,
+   en de tekst moet goed te lezen blijven */
+.tijdlijn-terug li.klaar .taak-kop,
+.tijdlijn-terug li.klaar .aanpak,
+.tijdlijn-terug li.klaar .tijd {
+  text-decoration: none;
+  color: inherit;
+}
+
+.tijdlijn-terug li.klaar .tijd {
+  color: var(--accent-donker);
 }
