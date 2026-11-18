@@ -1,0 +1,10 @@
+{
+  "name": "Dagplanner",
+  "short_name": "Dagplanner",
+  "lang": "nl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f2fb",
+  "theme_color": "#f3f2fb"
+}

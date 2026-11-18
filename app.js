@@ -1021,3 +1021,9 @@ function toonAlles() {
 
 menuKnoppen.forEach((knop) => knop.addEventListener("click", toonAlles));
 toonAlles();
+
+// De service worker aanmelden (nodig voor meldingen).
+// Oudere browsers kennen dit niet; dan slaan we het over.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
