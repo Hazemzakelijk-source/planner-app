@@ -448,9 +448,21 @@ function toonVandaag() {
     startKnop.disabled = Boolean(taak.gestartOp);
     startKnop.addEventListener("click", () => zetTijdstip(nummer, "gestartOp"));
 
-    knoppen.append(startKnop);
     // Een afgevinkte taak hoeft niet meer gestart te worden
-    if (!taak.klaarOp) item.append(knoppen);
+    if (!taak.klaarOp) knoppen.append(startKnop);
+
+    // Een extra taak mag je altijd verwijderen, ook als het plan vastzit:
+    // extra taken tellen niet mee voor de score.
+    if (taak.extra) {
+      const verwijderKnop = document.createElement("button");
+      verwijderKnop.className = "knop-verwijderen";
+      verwijderKnop.textContent = "Verwijderen";
+      verwijderKnop.addEventListener("click", () => verwijderExtraTaak(taak, nummer));
+      knoppen.append(verwijderKnop);
+    }
+
+    // Alleen een rij knoppen tonen als er ook knoppen in staan
+    if (knoppen.children.length > 0) item.append(knoppen);
 
     // Focustimer bij een focusblok dat nog niet is afgevinkt
     if (taak.focusblok && !taak.klaarOp) {
@@ -470,6 +482,19 @@ function toonVandaag() {
 
     tijdlijn.append(item);
   });
+}
+
+// Een extra taak van vandaag verwijderen, na een bevestiging
+function verwijderExtraTaak(taak, nummer) {
+  if (!confirm(`Extra taak "${taak.naam}" verwijderen?`)) return;
+
+  const gegevens = laadGegevens();
+  const dag = gegevens.dagen[datumSleutel(new Date())];
+  // Voor de zekerheid: alleen weghalen als het echt een extra taak is
+  if (!dag.taken[nummer] || !dag.taken[nummer].extra) return;
+  dag.taken.splice(nummer, 1); // splice haalt 1 taak weg op plek "nummer"
+  bewaarGegevens(gegevens);
+  toonVandaag();
 }
 
 // Vinkje aantikken: afgerond (tijdstip bewaren) of weer open (tijdstip wissen)
