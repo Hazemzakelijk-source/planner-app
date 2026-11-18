@@ -21,6 +21,7 @@ Een dagplanner met een disciplinescore, gebouwd door Hazem als leerproject om te
 9. Kleurthema's via het tandwieltje: fris pastel (standaard), licht, donker, fel, rustig blauw, automatisch en eigen kleuren met een contrastwaarschuwing (WCAG, 4,5 : 1). Met een knop "Terug naar standaard", geen flits bij het openen, en de statusbalk van de iPhone kleurt mee
 10. Uitloggen geldt alleen voor het apparaat waarop je het doet
 11. Alle invulvelden zijn minimaal 16px, zodat de iPhone niet inzoomt
+12. Terugkijken naar eerdere dagen: taken, notities, terugblik en score met opbouw. Alleen lezen, tot en met gisteren. Te openen via "Eerdere dagen bekijken" of een staaf in de grafiek op Disciplinescore
 
 ## Belangrijke keuzes en waarom
 - Inloggen met een code in plaats van een link: een link opent in Safari en niet in de app op het beginscherm
@@ -29,13 +30,14 @@ Een dagplanner met een disciplinescore, gebouwd door Hazem als leerproject om te
 - RLS staat aan: iedereen ziet alleen zijn eigen gegevens
 - Samenvoegen per dag en niet per taak: genoeg voor één gebruiker. Bij vrienden en teams opnieuw bekijken
 - De score moet eerlijk blijven. Nieuwe functies mogen de score niet ongemerkt veranderen
+- Terugkijken is alleen lezen: een oude dag kun je niet meer aanpassen. De score van een oude dag wordt opnieuw berekend met de regels van nu
 
 ## Technische opbouw
 Gewone HTML, CSS en JavaScript, zonder framework en zonder bouwstap. GitHub Pages serveert de bestanden zoals ze zijn.
 
 **Bestanden**
-- `index.html`: alle schermen (Morgen, Vandaag, Disciplinescore, Instellingen), het menu, de accountbalk en de vensters voor inloggen en vastzetten.
-- `app.js`: alle logica, in blokken met kopjes: opslag, de schermen, score, inloggen, synchroniseren, herinneringen en instellingen.
+- `index.html`: alle schermen (Morgen, Vandaag, Disciplinescore, Terugkijken, Instellingen), het menu, de accountbalk en de vensters voor inloggen en vastzetten.
+- `app.js`: alle logica, in blokken met kopjes: opslag, de schermen, score, terugkijken, inloggen, synchroniseren, herinneringen en instellingen. `dagScoreOpbouw` geeft de drie delen van de score; `dagScore` telt ze op.
 - `style.css`: alle kleuren zijn CSS-variabelen (`--accent`, `--achtergrond` enzovoort). Per thema is er een blok `[data-thema="..."]`.
 - `thema.js`: laadt in `<head>` en zet het thema vóór het tekenen (geen flits). Bevat ook de contrastberekening (WCAG).
 - `supabase.js`: de verbinding met Supabase (Project URL en publishable key, die openbaar mogen zijn).
@@ -93,17 +95,18 @@ Service role- of secret-key van Supabase, het databasewachtwoord, het Gmail-app-
 - Vraag Hazem alleen om in te loggen of iets op zijn iPhone te controleren als het echt nodig is
 
 ## Nu bezig
-Niets. Volgende stap: terugkijken naar eerdere dagen.
+Niets. Volgende stap: vooruit plannen als agenda.
 
 ## Ideeën voor later, in volgorde
-1. Terugkijken naar eerdere dagen
-2. Vooruit plannen als agenda (taken in de toekomst mogen de score niet beïnvloeden)
-3. Dagboek: aan het eind van de dag een korte notitie, apart terug te lezen
-4. Een taak niet kunnen afvinken vóór de begintijd
-5. Vrienden die elkaars score zien
-6. Een wekelijkse ranglijst in een groep
-7. Een locatiecheck bij het afvinken, bijvoorbeeld bij de gym
+1. Vooruit plannen als agenda (taken in de toekomst mogen de score niet beïnvloeden)
+2. Dagboek: aan het eind van de dag een korte notitie, apart terug te lezen
+3. Een taak niet kunnen afvinken vóór de begintijd
+4. Vrienden die elkaars score zien
+5. Een wekelijkse ranglijst in een groep
+6. Een locatiecheck bij het afvinken, bijvoorbeeld bij de gym
 
 ## Om te onthouden
+- Elke wijziging stuurt alle dagen opnieuw naar Supabase (één rij met alle gegevens, plus alle dagscores). Dat groeit elke dag. Wordt het traag, of komen er vrienden en teams bij, dan alleen de veranderde dagen versturen.
+- Bij testen in de lokale preview kan de browser een oude `app.js` uit de cache gebruiken. Laad de bestanden dan opnieuw met `fetch(..., { cache: "reload" })`.
 - Supabase zet het project op pauze na een week zonder gebruik. Herstellen via supabase.com met Restore.
 - Wordt het Gmail-app-wachtwoord ingetrokken, dan komen er geen inlogcodes meer.
