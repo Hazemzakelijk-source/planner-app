@@ -157,6 +157,13 @@
     </button>
   </nav>
 
+  <!-- De Supabase-bibliotheek, van jsDelivr. We vragen een vaste versie,
+       en "integrity" controleert dat het bestand precies dat bestand is
+       (een soort vingerafdruk). Is het veranderd, dan laadt de browser het niet. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.min.js"
+          integrity="sha384-gnyZit14c5lnGcarmA166QQjjJXpucw25ogZXuwH3HxxY904zHkBqmxVpelsPorb"
+          crossorigin="anonymous"></script>
+  <script src="supabase.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
