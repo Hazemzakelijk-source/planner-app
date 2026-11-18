@@ -101,9 +101,15 @@ Niets. Volgende stap: vooruit plannen als agenda.
 1. Vooruit plannen als agenda (taken in de toekomst mogen de score niet beïnvloeden)
 2. Dagboek: aan het eind van de dag een korte notitie, apart terug te lezen
 3. Een taak niet kunnen afvinken vóór de begintijd
-4. Vrienden die elkaars score zien
+4. Vrienden die elkaars score zien (eerst de beveiligingscheck hieronder)
 5. Een wekelijkse ranglijst in een groep
 6. Een locatiecheck bij het afvinken, bijvoorbeeld bij de gym
+
+## Voor later, vóór vrienden en teams
+Een beveiligingscheck, voordat iemand anders dan Hazem de app gebruikt:
+- **RLS:** controleren dat RLS op alle tabellen aan staat en dat elke regel klopt. Ook op nieuwe tabellen voor vrienden en groepen.
+- **Geen geheimen:** controleren dat er geen geheimen in de code of op GitHub staan, ook niet in oude commits.
+- **Andermans gegevens:** als vrienden elkaars score kunnen zien, mogen ze alleen de score zien. Taken, notities en terugblik blijven privé. Let op: die staan allemaal samen in `planners`, dus scores delen gaat via `dagscores` en nooit via `planners`. Testen met twee testaccounts.
 
 ## Om te onthouden
 - Elke wijziging stuurt alle dagen opnieuw naar Supabase (één rij met alle gegevens, plus alle dagscores). Dat groeit elke dag. Wordt het traag, of komen er vrienden en teams bij, dan alleen de veranderde dagen versturen.
