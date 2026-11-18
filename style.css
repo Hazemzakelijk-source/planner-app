@@ -3,7 +3,8 @@
    Alle kleuren staan hier op één plek, als CSS-variabelen.
    Gebruik ze verderop met var(--naam). Eén kleur aanpassen = één regel.
    ============================================================ */
-:root {
+:root,
+[data-thema="pastel"] {
   --achtergrond: #f3f2fb;    /* lavendel */
   --kaart: #ffffff;
   --tekst: #2a2747;
@@ -529,6 +530,85 @@ form.dialoog-knoppen {
   flex: 1;
 }
 
+/* ---------- Instellingen ---------- */
+
+.thema-keuzes {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* twee keuzes naast elkaar */
+  gap: 10px;
+}
+
+/* Elke keuze is een kaartje; het rondje van de radioknop zelf verbergen we niet,
+   zodat duidelijk is dat je er één kiest */
+.thema-keuze {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px;
+  background: var(--kaart);
+  border: 2px solid var(--rand);
+  border-radius: var(--rond-kaart);
+  color: var(--tekst);
+}
+
+/* :has() = "als er binnenin een aangevinkte radioknop zit" */
+.thema-keuze:has(input:checked) {
+  border-color: var(--accent);
+}
+
+.thema-naam {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.thema-naam input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+/* Het voorbeeldje: door data-thema op dit element gebruikt het
+   de kleuren van dát thema, wat er ook op de rest van de pagina staat */
+.thema-voorbeeld {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--achtergrond);
+  border: 1px solid var(--rand);
+}
+
+.vb-kaart {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 6px;
+  background: var(--kaart);
+}
+
+.vb-tekst {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--tekst);
+}
+
+.vb-knop {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--accent);
+}
+
+.vb-stip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
 /* ---------- Account en inloggen ---------- */
 
 /* Smalle balk bovenaan: wie is ingelogd, met een kleine knop */
@@ -554,6 +634,12 @@ form.dialoog-knoppen {
   flex-shrink: 0;
   color: var(--roze-donker);
   font-weight: 500;
+}
+
+/* Het tandwieltje rechtsboven */
+.tandwiel {
+  font-size: 1rem;
+  padding: 6px 10px;
 }
 
 .kleine-knop {

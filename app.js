@@ -1242,6 +1242,57 @@ herinneringKnop.addEventListener("click", async () => {
 });
 
 // ============================================================
+// Instellingen: kleurenschema kiezen
+// ============================================================
+
+// De keuzes, in de volgorde waarin je ze ziet
+const THEMAS = [
+  { id: "pastel", naam: "Fris pastel" },
+  { id: "licht", naam: "Licht" },
+  { id: "donker", naam: "Donker" },
+  { id: "fel", naam: "Fel" },
+  { id: "blauw", naam: "Rustig blauw" },
+];
+
+const themaKeuzes = document.querySelector("#thema-keuzes");
+
+// Eén keer de kaartjes maken: een voorbeeldje plus een radioknop met de naam
+THEMAS.forEach(({ id, naam }) => {
+  const keuze = document.createElement("label");
+  keuze.className = "thema-keuze";
+  keuze.innerHTML = `
+    <span class="thema-voorbeeld" data-thema="${id}" aria-hidden="true">
+      <span class="vb-kaart"><span class="vb-stip"></span><span class="vb-tekst"></span></span>
+      <span class="vb-knop"></span>
+    </span>
+    <span class="thema-naam"><input type="radio" name="thema" value="${id}"> ${naam}</span>`;
+  themaKeuzes.append(keuze);
+});
+
+// Een thema kiezen: bewaren bij je gegevens (en dus ook in Supabase) en meteen tonen
+themaKeuzes.addEventListener("change", (event) => {
+  const gegevens = laadGegevens();
+  gegevens.instellingen = { ...(gegevens.instellingen || {}), thema: event.target.value };
+  bewaarGegevens(gegevens);
+  pasThemaToe(gegevens.instellingen);
+});
+
+// De juiste keuze aangevinkt laten zien
+function toonInstellingen() {
+  const thema = (laadGegevens().instellingen || {}).thema || THEMA_STANDAARD;
+  themaKeuzes.querySelectorAll("input").forEach((radio) => {
+    radio.checked = radio.value === thema;
+  });
+}
+
+// Het tandwieltje opent het instellingenscherm.
+// Geen van de menuknoppen is dan "actief"; tik er een aan om terug te gaan.
+document.querySelector("#instellingen-knop").addEventListener("click", () => {
+  toonScherm("scherm-instellingen");
+  toonAlles();
+});
+
+// ============================================================
 // Opstarten
 // ============================================================
 
@@ -1252,6 +1303,9 @@ function toonAlles() {
   toonVandaag();
   toonTerugblik();
   toonScore();
+  toonInstellingen();
+  // Thema opnieuw toepassen: misschien is het via een ander apparaat veranderd
+  pasThemaToe(laadGegevens().instellingen || {});
 }
 
 menuKnoppen.forEach((knop) => knop.addEventListener("click", toonAlles));

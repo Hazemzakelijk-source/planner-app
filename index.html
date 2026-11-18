@@ -13,6 +13,8 @@
   <!-- Het icoon op het beginscherm van de iPhone (Apple kijkt hiernaar, niet naar het manifest) -->
   <link rel="apple-touch-icon" href="iconen/apple-touch-icon.png">
   <link rel="icon" href="iconen/icoon.svg" type="image/svg+xml">
+  <!-- Het gekozen thema meteen toepassen, nog voordat de pagina getekend wordt -->
+  <script src="thema.js"></script>
 </head>
 <body>
   <main>
@@ -22,6 +24,7 @@
       <span id="sync-status" class="sync-status" hidden></span>
       <button id="inlog-knop" class="kleine-knop"><span aria-hidden="true">☁️</span> Inloggen</button>
       <button id="uitlog-knop" class="kleine-knop" hidden>Uitloggen</button>
+      <button id="instellingen-knop" class="kleine-knop tandwiel" aria-label="Instellingen">⚙️</button>
     </div>
     <!-- Alleen zichtbaar als je bent ingelogd én dit apparaat meldingen kan krijgen -->
     <button id="herinnering-knop" class="kleine-knop herinnering-knop" hidden></button>
@@ -173,6 +176,13 @@
         <p id="score-reeks" class="getal"></p>
         <p>Dagen achter elkaar gepland</p>
       </div>
+    </section>
+    <!-- Scherm 4: Instellingen (te openen met het tandwieltje) -->
+    <section id="scherm-instellingen" class="scherm" hidden>
+      <h1><span aria-hidden="true">⚙️</span> Instellingen</h1>
+      <h2><span aria-hidden="true">🎨</span> Kleuren</h2>
+      <!-- JavaScript zet hier de keuzes neer -->
+      <div id="thema-keuzes" class="thema-keuzes" role="radiogroup" aria-label="Kleurenschema"></div>
     </section>
   </main>
 
