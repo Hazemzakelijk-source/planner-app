@@ -1165,12 +1165,14 @@ function pushMogelijk() {
 }
 
 async function haalAbonnement() {
-  const registratie = await navigator.serviceWorker.ready;
-  return registratie.pushManager.getSubscription();
+  // getRegistration geeft "niets" als de service worker niet is aangemeld,
+  // in plaats van eeuwig te wachten (zoals .ready zou doen)
+  const registratie = await navigator.serviceWorker.getRegistration();
+  return registratie ? registratie.pushManager.getSubscription() : null;
 }
 
 async function toonHerinneringKnop() {
-  if (!gebruiker || !pushMogelijk()) {
+  if (!gebruiker || !pushMogelijk() || !(await navigator.serviceWorker.getRegistration())) {
     herinneringKnop.hidden = true;
     return;
   }
