@@ -666,22 +666,26 @@ function totaalGewicht(taken) {
   return taken.reduce((som, taak) => som + (taak.belangrijkste ? 2 : 1), 0);
 }
 
-// Score van één dag, van 0 tot 100. Een dag zonder taken scoort 0.
+// De opbouw van de score van één dag, in drie delen:
+// - vastgezet: 20 punten als het plan op de dag ervoor is vastgezet
+// - afgerond:  60 x (afgerond / gepland)
+// - opTijd:    20 x (op tijd afgerond / gepland)
+// Plus de aantallen taken, om op het scherm Terugkijken te laten zien.
+// Een dag zonder (geplande) taken geeft null: die scoort 0.
 // Extra taken tellen niet mee.
-function dagScore(sleutel) {
+function dagScoreOpbouw(sleutel) {
   const dag = laadGegevens().dagen[sleutel];
-  if (!dag) return 0;
+  if (!dag) return null;
   const taken = geplandeTaken(dag);
-  if (taken.length === 0) return 0;
-
-  let punten = 0;
+  if (taken.length === 0) return null;
 
   // 20 punten: plan vastgezet op de dag ervoor, dus uiterlijk om middernacht
+  let vastgezet = 0;
   if (dag.vastgezetOp) {
-    const vastgezet = new Date(dag.vastgezetOp);
+    const moment = new Date(dag.vastgezetOp);
     const dagErvoor = dagenTerug(datumVanSleutel(sleutel), 1);
-    if (datumSleutel(vastgezet) === datumSleutel(dagErvoor)) {
-      punten += 20;
+    if (datumSleutel(moment) === datumSleutel(dagErvoor)) {
+      vastgezet = 20;
     }
   }
 
@@ -694,11 +698,21 @@ function dagScore(sleutel) {
   // We tellen dus geen taken meer, maar gewichten.
   const gepland = totaalGewicht(taken);
 
-  // 60 x (afgerond / gepland) en 20 x (op tijd afgerond / gepland)
-  punten += (60 * totaalGewicht(afgerond)) / gepland;
-  punten += (20 * totaalGewicht(opTijd)) / gepland;
+  return {
+    vastgezet,
+    afgerond: (60 * totaalGewicht(afgerond)) / gepland,
+    opTijd: (20 * totaalGewicht(opTijd)) / gepland,
+    aantalGepland: taken.length,
+    aantalAfgerond: afgerond.length,
+    aantalOpTijd: opTijd.length,
+  };
+}
 
-  return punten;
+// Score van één dag, van 0 tot 100: de drie delen van de opbouw bij elkaar
+function dagScore(sleutel) {
+  const opbouw = dagScoreOpbouw(sleutel);
+  if (!opbouw) return 0;
+  return opbouw.vastgezet + opbouw.afgerond + opbouw.opTijd;
 }
 
 // Gemiddelde van de 7 dagen vóór vandaag (gisteren t/m 7 dagen terug).
