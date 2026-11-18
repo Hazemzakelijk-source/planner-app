@@ -462,6 +462,8 @@ function toonVandaag() {
     if (!magAfvinken(taak)) {
       vinkje.disabled = true;
       vinkje.setAttribute("aria-label", `Afvinken kan vanaf ${taak.begintijd}`);
+      // Onthouden wanneer het slot open mag (zie werkTimersBij)
+      vinkje.dataset.vanaf = beginMoment(datumSleutel(vandaag), taak).toISOString();
       const slot = document.createElement("p");
       slot.className = "taak-status";
       slot.textContent = `⏳ Afvinken kan vanaf ${taak.begintijd}`;
@@ -616,6 +618,20 @@ function werkTimersBij() {
   document.querySelectorAll(".timer").forEach((tijd) => {
     tijd.textContent = resterendeTijd(tijd.dataset.eind);
   });
+  openSlotenAlsHetTijdIs();
+}
+
+// Is de begintijd van een taak op slot voorbij? Dan het scherm opnieuw tekenen,
+// zodat het vinkje open gaat zonder de app te herladen.
+// Typ je net iets in een veld op Vandaag, dan wachten we even
+// (opnieuw tekenen zou dat veld leegmaken).
+function openSlotenAlsHetTijdIs() {
+  const nu = new Date();
+  const sloten = [...tijdlijn.querySelectorAll(".vinkje-rond[data-vanaf]")];
+  if (!sloten.some((vinkje) => nu >= new Date(vinkje.dataset.vanaf))) return;
+  const actief = document.activeElement;
+  if (tijdlijn.contains(actief) && actief.matches("input, textarea")) return;
+  toonVandaag();
 }
 setInterval(werkTimersBij, 1000);
 // Kom je terug in de app, dan meteen bijwerken (niet pas na een seconde)
