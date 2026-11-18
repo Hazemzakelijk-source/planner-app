@@ -98,12 +98,13 @@ Service role- of secret-key van Supabase, het databasewachtwoord, het Gmail-app-
 Niets. Volgende stap: vooruit plannen als agenda.
 
 ## Ideeën voor later, in volgorde
-1. Vooruit plannen als agenda (taken in de toekomst mogen de score niet beïnvloeden)
-2. Dagboek: aan het eind van de dag een korte notitie, apart terug te lezen
-3. Een taak niet kunnen afvinken vóór de begintijd
-4. Vrienden die elkaars score zien (eerst de beveiligingscheck hieronder)
-5. Een wekelijkse ranglijst in een groep
-6. Een locatiecheck bij het afvinken, bijvoorbeeld bij de gym
+1. Agenda: vooruit plannen, met een nieuwe knop "Agenda" in het menu onderin, naast de bestaande knoppen. Toekomstige afspraken mogen de score niet beïnvloeden
+2. Locatiecheck bij het afvinken, bijvoorbeeld bij de gym (hoge prioriteit)
+3. Dagboek: aan het eind van de dag een korte notitie, apart terug te lezen
+4. Een taak niet kunnen afvinken vóór de begintijd
+5. Vrienden: scores van vrienden zien en reageren met een emoji, bijvoorbeeld een spierballetje 💪 (eerst de beveiligingscheck hieronder)
+6. Stories: vrienden plaatsen een foto, bijvoorbeeld in de gym, en anderen reageren met een emoji (eerst de beveiligingscheck hieronder)
+7. Een wekelijkse ranglijst in een groep
 
 ## Voor later, vóór vrienden en teams
 Een beveiligingscheck, voordat iemand anders dan Hazem de app gebruikt:
