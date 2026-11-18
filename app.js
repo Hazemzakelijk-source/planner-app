@@ -890,7 +890,9 @@ codeFormulier.addEventListener("submit", (event) => {
 document.querySelector("#uitlog-knop").addEventListener("click", async () => {
   // Eerst de herinneringen op dit apparaat uitzetten, anders krijg je ze na uitloggen nog steeds
   await zetHerinneringenUit();
-  await db.auth.signOut();
+  // scope "local": alleen op dít apparaat uitloggen.
+  // Zonder deze keuze logt Supabase je op al je apparaten tegelijk uit.
+  await db.auth.signOut({ scope: "local" });
 });
 
 // ============================================================
@@ -993,7 +995,12 @@ function inDeRij(werk) {
 // Na een wijziging: wacht 1 seconde en stuur dan alles in één keer.
 // Typ je een notitie, dan sturen we dus niet bij elke letter.
 function planSync() {
-  if (!gebruiker) return;
+  if (!gebruiker) {
+    // Uitgelogd op een apparaat dat al aan een account hangt? Onthoud dan dat er
+    // iets veranderd is, zodat het na opnieuw inloggen alsnog online komt.
+    if (localStorage.getItem(SYNC_GEBRUIKER)) localStorage.setItem(SYNC_WACHT, "ja");
+    return;
+  }
   wijzigingNummer++;
   localStorage.setItem(SYNC_WACHT, "ja");
   clearTimeout(syncTimer);
@@ -1076,6 +1083,11 @@ async function versturen(poging = 1) {
 // De online versie ophalen en op dit apparaat zetten
 async function ophalen() {
   if (!gebruiker) return;
+
+  // Logt er een ánder account in dan dat hier eerder was? Dan horen de
+  // wachtende wijzigingen niet bij dit account: niet versturen.
+  const vorigAccount = localStorage.getItem(SYNC_GEBRUIKER);
+  if (vorigAccount && vorigAccount !== gebruiker.id) localStorage.removeItem(SYNC_WACHT);
 
   // Staan er nog eigen wijzigingen klaar? Die eerst versturen.
   // De versiecontrole zorgt dat we daarbij niets van een ander apparaat wissen.
