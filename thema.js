@@ -21,8 +21,17 @@ function leesInstellingen() {
   }
 }
 
+// Staat de telefoon in donkere modus? matchMedia stelt die vraag aan de browser.
+const donkereModus = window.matchMedia("(prefers-color-scheme: dark)");
+
+// "Automatisch" is geen eigen kleurenset: het kiest pastel of donker
+function echtThema(thema) {
+  if (thema === "automatisch") return donkereModus.matches ? "donker" : "pastel";
+  return thema;
+}
+
 function pasThemaToe(instellingen) {
-  const thema = instellingen.thema || THEMA_STANDAARD;
+  const thema = echtThema(instellingen.thema || THEMA_STANDAARD);
   document.documentElement.dataset.thema = thema;
 
   // De statusbalk van de telefoon (bovenaan, met de klok) in de achtergrondkleur
@@ -33,3 +42,13 @@ function pasThemaToe(instellingen) {
 }
 
 pasThemaToe(leesInstellingen());
+
+// Wisselt de telefoon van licht naar donker (bijvoorbeeld 's avonds)?
+// Dan meteen meewisselen, ook als de app al open is.
+donkereModus.addEventListener("change", () => pasThemaToe(leesInstellingen()));
+
+// Voor de zekerheid ook als je terugkomt in de app: de telefoon kan
+// intussen gewisseld zijn terwijl de app op de achtergrond stond.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") pasThemaToe(leesInstellingen());
+});

@@ -580,6 +580,16 @@ form.dialoog-knoppen {
   border: 1px solid var(--rand);
 }
 
+/* Twee voorbeeldjes naast elkaar (bij Automatisch) */
+.vb-duo {
+  display: flex;
+  gap: 4px;
+}
+
+.vb-duo .thema-voorbeeld {
+  flex: 1;
+}
+
 .vb-kaart {
   display: flex;
   align-items: center;

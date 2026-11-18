@@ -1247,6 +1247,7 @@ herinneringKnop.addEventListener("click", async () => {
 
 // De keuzes, in de volgorde waarin je ze ziet
 const THEMAS = [
+  { id: "automatisch", naam: "Automatisch" },
   { id: "pastel", naam: "Fris pastel" },
   { id: "licht", naam: "Licht" },
   { id: "donker", naam: "Donker" },
@@ -1257,14 +1258,23 @@ const THEMAS = [
 const themaKeuzes = document.querySelector("#thema-keuzes");
 
 // Eén keer de kaartjes maken: een voorbeeldje plus een radioknop met de naam
-THEMAS.forEach(({ id, naam }) => {
-  const keuze = document.createElement("label");
-  keuze.className = "thema-keuze";
-  keuze.innerHTML = `
+function voorbeeld(id) {
+  return `
     <span class="thema-voorbeeld" data-thema="${id}" aria-hidden="true">
       <span class="vb-kaart"><span class="vb-stip"></span><span class="vb-tekst"></span></span>
       <span class="vb-knop"></span>
-    </span>
+    </span>`;
+}
+
+THEMAS.forEach(({ id, naam }) => {
+  const keuze = document.createElement("label");
+  keuze.className = "thema-keuze";
+  // Automatisch: een voorbeeldje van licht (pastel) én donker naast elkaar
+  const plaatje =
+    id === "automatisch"
+      ? `<span class="vb-duo">${voorbeeld("pastel")}${voorbeeld("donker")}</span>`
+      : voorbeeld(id);
+  keuze.innerHTML = `${plaatje}
     <span class="thema-naam"><input type="radio" name="thema" value="${id}"> ${naam}</span>`;
   themaKeuzes.append(keuze);
 });
