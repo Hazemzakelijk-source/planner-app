@@ -410,6 +410,24 @@ const tijdlijn = document.querySelector("#tijdlijn");
 const geenPlan = document.querySelector("#geen-plan");
 const vandaagDatum = document.querySelector("#vandaag-datum");
 
+// ---------- Afvinken pas vanaf de begintijd ----------
+
+// Het moment waarop een taak begint, bijvoorbeeld vandaag om 09:00
+function beginMoment(sleutel, taak) {
+  const begin = datumVanSleutel(sleutel);
+  const [uren, minuten] = taak.begintijd.split(":").map(Number);
+  begin.setHours(uren, minuten);
+  return begin;
+}
+
+// Een geplande taak mag je pas afvinken als de begintijd voorbij is.
+// Extra taken mogen altijd: die tellen niet mee voor de score, en vaak voeg
+// je ze pas toe als je ze al gedaan hebt. Een vinkje weghalen mag ook altijd.
+function magAfvinken(taak, sleutel = datumSleutel(new Date())) {
+  if (taak.extra || taak.klaarOp) return true;
+  return new Date() >= beginMoment(sleutel, taak);
+}
+
 function toonVandaag() {
   const vandaag = new Date();
   vandaagDatum.textContent = datumTekst(vandaag);
@@ -439,6 +457,16 @@ function toonVandaag() {
     vinkje.setAttribute("aria-label", taak.klaarOp ? "Afvinken ongedaan maken" : "Afvinken");
     vinkje.addEventListener("click", () => wisselKlaar(nummer));
     item.prepend(vinkje);
+
+    // Nog vóór de begintijd? Dan zit het vinkje op slot, met uitleg erbij
+    if (!magAfvinken(taak)) {
+      vinkje.disabled = true;
+      vinkje.setAttribute("aria-label", `Afvinken kan vanaf ${taak.begintijd}`);
+      const slot = document.createElement("p");
+      slot.className = "taak-status";
+      slot.textContent = `⏳ Afvinken kan vanaf ${taak.begintijd}`;
+      item.append(slot);
+    }
 
     const knoppen = document.createElement("div");
     knoppen.className = "knoppen";
@@ -503,6 +531,8 @@ function verwijderExtraTaak(taak, nummer) {
 function wisselKlaar(nummer) {
   const gegevens = laadGegevens();
   const taak = gegevens.dagen[datumSleutel(new Date())].taken[nummer];
+  // Ook hier controleren, niet alleen in het scherm
+  if (!magAfvinken(taak)) return;
   taak.klaarOp = taak.klaarOp ? null : new Date().toISOString();
   bewaarGegevens(gegevens);
   toonVandaag();

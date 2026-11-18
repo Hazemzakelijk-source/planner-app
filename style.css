@@ -474,6 +474,12 @@ form button.knop-annuleren {
   padding: 0;
 }
 
+/* Vinkje op slot (vóór de begintijd): gestippelde rand, vaag */
+.vinkje-rond:disabled {
+  border-style: dashed;
+  opacity: 0.5;
+}
+
 .tijdlijn li.klaar .vinkje-rond {
   border-color: var(--accent);
   background: var(--accent);
