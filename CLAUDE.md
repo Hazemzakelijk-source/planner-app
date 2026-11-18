@@ -22,6 +22,7 @@ Een dagplanner met een disciplinescore, gebouwd door Hazem als leerproject om te
 10. Uitloggen geldt alleen voor het apparaat waarop je het doet
 11. Alle invulvelden zijn minimaal 16px, zodat de iPhone niet inzoomt
 12. Terugkijken naar eerdere dagen: taken, notities, terugblik en score met opbouw. Alleen lezen, tot en met gisteren. Te openen via "Eerdere dagen bekijken" of een staaf in de grafiek op Disciplinescore
+13. Een geplande taak kun je pas afvinken vanaf de begintijd. Het vinkje gaat vanzelf open, zonder herladen. Extra taken, "Gestart", de focustimer en een vinkje weghalen kunnen altijd
 
 ## Belangrijke keuzes en waarom
 - Inloggen met een code in plaats van een link: een link opent in Safari en niet in de app op het beginscherm
@@ -101,15 +102,15 @@ Niets. Volgende stap: vooruit plannen als agenda.
 1. Agenda: vooruit plannen, met een nieuwe knop "Agenda" in het menu onderin, naast de bestaande knoppen. Toekomstige afspraken mogen de score niet beïnvloeden
 2. Locatiecheck bij het afvinken, bijvoorbeeld bij de gym (hoge prioriteit)
 3. Dagboek: aan het eind van de dag een korte notitie, apart terug te lezen
-4. Een taak niet kunnen afvinken vóór de begintijd
-5. Vrienden: scores van vrienden zien en reageren met een emoji, bijvoorbeeld een spierballetje 💪 (eerst de beveiligingscheck hieronder)
-6. Stories: vrienden plaatsen een foto, bijvoorbeeld in de gym, en anderen reageren met een emoji (eerst de beveiligingscheck hieronder)
-7. Een wekelijkse ranglijst in een groep
+4. Vrienden: scores van vrienden zien en reageren met een emoji, bijvoorbeeld een spierballetje 💪 (eerst de beveiligingscheck hieronder)
+5. Stories: vrienden plaatsen een foto, bijvoorbeeld in de gym, en anderen reageren met een emoji (eerst de beveiligingscheck hieronder)
+6. Een wekelijkse ranglijst in een groep
 
 ## Voor later, vóór vrienden en teams
 Een beveiligingscheck, voordat iemand anders dan Hazem de app gebruikt:
 - **RLS:** controleren dat RLS op alle tabellen aan staat en dat elke regel klopt. Ook op nieuwe tabellen voor vrienden en groepen.
 - **Geen geheimen:** controleren dat er geen geheimen in de code of op GitHub staan, ook niet in oude commits.
+- **Vals spelen met de klok:** afvinken vanaf de begintijd gebruikt nu de klok van de telefoon. Zet je die vooruit, dan kun je eerder afvinken. Bij een ranglijst moet Supabase het tijdstip controleren.
 - **Andermans gegevens:** als vrienden elkaars score kunnen zien, mogen ze alleen de score zien. Taken, notities en terugblik blijven privé. Let op: die staan allemaal samen in `planners`, dus scores delen gaat via `dagscores` en nooit via `planners`. Testen met twee testaccounts.
 
 ## Om te onthouden
