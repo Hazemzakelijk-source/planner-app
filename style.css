@@ -7,11 +7,12 @@
   --achtergrond: #f3f2fb;    /* lavendel */
   --kaart: #ffffff;
   --tekst: #2a2747;
-  --tekst-zacht: #6e6a93;
+  --tekst-zacht: #66628b;
   --tekst-vaag: #a09dc0;
   --rand: #e4e2f3;
 
   --accent: #6c63d9;         /* indigo: knoppen, vinkjes, grafiek */
+  --op-accent: #ffffff;      /* tekst óp een knop met de accentkleur */
   --accent-donker: #3f37a3;
   --accent-licht: #eceafd;
 
@@ -25,6 +26,95 @@
   --rond-kaart: 16px;
   --rond-knop: 12px;
   --schaduw: 0 1px 3px rgba(42, 39, 71, 0.06);
+
+  /* Vertelt de browser of dit een licht of donker thema is
+     (voor bijvoorbeeld de kleur van invoervelden en schuifbalken) */
+  color-scheme: light;
+}
+
+/* ============================================================
+   Andere thema's. JavaScript zet data-thema="..." op <html>;
+   dan gelden de kleuren uit het blok hieronder in plaats van die hierboven.
+   Elk thema is gecontroleerd: alle tekst heeft een contrast van
+   minstens 4,5 : 1 met zijn achtergrond.
+   ============================================================ */
+
+[data-thema="licht"] {
+  --achtergrond: #f5f5f7;
+  --kaart: #ffffff;
+  --tekst: #1d1d1f;
+  --tekst-zacht: #5f6368;
+  --tekst-vaag: #a0a4ab;
+  --rand: #e3e3e8;
+  --accent: #1f4fbf;
+  --op-accent: #ffffff;
+  --accent-donker: #163a8c;
+  --accent-licht: #e6ecfa;
+  --roze-licht: #fde4e4;
+  --roze-donker: #9b1c1c;
+  --geel-licht: #fdf3d0;
+  --geel-donker: #6e4a00;
+  --mint-licht: #e0f3e8;
+  --mint-donker: #17643a;
+}
+
+[data-thema="donker"] {
+  --achtergrond: #121216;
+  --kaart: #1e1e26;
+  --tekst: #ecebf5;
+  --tekst-zacht: #a9a7bf;
+  --tekst-vaag: #5f5d73;
+  --rand: #2e2d3a;
+  --accent: #a39cf5;
+  --op-accent: #15131f;      /* lichte knoppen, dus donkere tekst erop */
+  --accent-donker: #c9c4ff;  /* in een donker thema is de "sterke" accentkleur juist licht */
+  --accent-licht: #2c2952;
+  --roze-licht: #3d2328;
+  --roze-donker: #ffb3bd;
+  --geel-licht: #3a3015;
+  --geel-donker: #ffd77a;
+  --mint-licht: #183a2c;
+  --mint-donker: #8be3b8;
+  --schaduw: none;
+  color-scheme: dark;
+}
+
+[data-thema="fel"] {
+  --achtergrond: #fff4f9;
+  --kaart: #ffffff;
+  --tekst: #1a1020;
+  --tekst-zacht: #5c4a63;
+  --tekst-vaag: #c9a7b8;
+  --rand: #f5d4e6;
+  --accent: #d1006f;
+  --op-accent: #ffffff;
+  --accent-donker: #9e0054;
+  --accent-licht: #ffe0f0;
+  --roze-licht: #ffe1e1;
+  --roze-donker: #b00020;
+  --geel-licht: #fff0b3;
+  --geel-donker: #7a4f00;
+  --mint-licht: #d6f7e6;
+  --mint-donker: #00663a;
+}
+
+[data-thema="blauw"] {
+  --achtergrond: #eef3f8;
+  --kaart: #ffffff;
+  --tekst: #1f2d3d;
+  --tekst-zacht: #52657a;
+  --tekst-vaag: #9aaabb;
+  --rand: #dbe4ee;
+  --accent: #3d6a96;
+  --op-accent: #ffffff;
+  --accent-donker: #284a6e;
+  --accent-licht: #e3edf7;
+  --roze-licht: #f8e4e6;
+  --roze-donker: #8a3240;
+  --geel-licht: #fbf1d6;
+  --geel-donker: #6e5410;
+  --mint-licht: #e0f1ea;
+  --mint-donker: #2b6650;
 }
 
 /* ---------- Basis ---------- */
@@ -102,7 +192,7 @@ form,
   border: none;
   background: none;
   font-size: 0.75rem;
-  color: var(--tekst-vaag);
+  color: var(--tekst-zacht);
 }
 
 .menu svg {
@@ -192,7 +282,7 @@ form button,
   border: none;
   border-radius: var(--rond-knop);
   background: var(--accent);
-  color: #fff;
+  color: var(--op-accent);
   font-weight: 500;
 }
 
@@ -342,7 +432,7 @@ form button.knop-annuleren {
 .tijdlijn li.klaar .aanpak,
 .tijdlijn li.klaar .tijd {
   text-decoration: line-through;
-  color: var(--tekst-vaag);
+  color: var(--tekst-zacht);
 }
 
 /* Het ronde vinkje: een cirkel met alleen een rand, of gevuld met ✓ */
@@ -355,7 +445,7 @@ form button.knop-annuleren {
   border-radius: 50%;
   border: 2px solid var(--tekst-vaag);
   background: var(--kaart);
-  color: #fff;
+  color: var(--op-accent);
   font-size: 1.1rem;
   font-weight: bold;
   line-height: 1;
@@ -414,6 +504,7 @@ dialog {
   border: none;
   border-radius: var(--rond-kaart);
   padding: 20px;
+  background: var(--kaart);
   color: var(--tekst);
 }
 
@@ -532,7 +623,7 @@ form.dialoog-formulier {
 
 .scorekaart.uitgelicht p,
 .scorekaart.uitgelicht .getal {
-  color: #fff;
+  color: var(--op-accent);
 }
 
 .emoji {
