@@ -9,6 +9,40 @@
 </head>
 <body>
   <main>
+    <!-- Accountbalk bovenaan: inloggen, of laten zien met welk e-mailadres je bent ingelogd -->
+    <div class="accountbalk">
+      <span id="account-tekst">Niet ingelogd</span>
+      <button id="inlog-knop" class="kleine-knop"><span aria-hidden="true">☁️</span> Inloggen</button>
+      <button id="uitlog-knop" class="kleine-knop" hidden>Uitloggen</button>
+    </div>
+
+    <!-- Inlogvenster in twee stappen: eerst je e-mail, dan de code uit je mail -->
+    <dialog id="inlog-dialoog">
+      <form id="email-formulier" class="dialoog-formulier">
+        <p>Vul je e-mailadres in. Je krijgt een code van 6 cijfers in je mail.</p>
+        <label>E-mailadres
+          <input name="email" type="email" autocomplete="email" required>
+        </label>
+        <div class="dialoog-knoppen">
+          <button type="button" class="knop-annuleren">Annuleren</button>
+          <button type="submit">Stuur code</button>
+        </div>
+      </form>
+      <!-- autocomplete="one-time-code": de iPhone stelt de code uit je mail vanzelf voor -->
+      <form id="code-formulier" class="dialoog-formulier" hidden>
+        <p id="code-uitleg"></p>
+        <label>Code
+          <input name="code" type="text" inputmode="numeric" autocomplete="one-time-code"
+                 pattern="[0-9]{6}" maxlength="6" required>
+        </label>
+        <div class="dialoog-knoppen">
+          <button type="button" class="knop-annuleren">Annuleren</button>
+          <button type="submit">Inloggen</button>
+        </div>
+      </form>
+      <p id="inlog-fout" class="fout" hidden></p>
+    </dialog>
+
     <!-- Scherm 1: Morgen plannen -->
     <section id="scherm-morgen" class="scherm">
       <h1><span aria-hidden="true">🗓️</span> Morgen plannen</h1>

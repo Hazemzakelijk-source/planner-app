@@ -438,6 +438,60 @@ form.dialoog-knoppen {
   flex: 1;
 }
 
+/* ---------- Account en inloggen ---------- */
+
+/* Smalle balk bovenaan: wie is ingelogd, met een kleine knop */
+.accountbalk {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--tekst-zacht);
+}
+
+/* Lange e-mailadressen afkappen met ... in plaats van de balk breder te maken */
+#account-tekst {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kleine-knop {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent-licht);
+  color: var(--accent-donker);
+  font-weight: 500;
+}
+
+/* Formulieren in het inlogvenster: geen eigen kaart, het venster is al de kaart */
+form.dialoog-formulier {
+  padding: 0;
+  box-shadow: none;
+}
+
+.dialoog-formulier p {
+  margin: 0;
+}
+
+.dialoog-knoppen {
+  display: flex;
+  gap: 8px;
+}
+
+.fout {
+  margin: 12px 0 0 !important;
+  padding: 10px 12px;
+  border-radius: var(--rond-knop);
+  background: var(--roze-licht);
+  color: var(--roze-donker);
+  font-size: 0.9rem;
+}
+
 /* ---------- Disciplinescore ---------- */
 
 .scorekaart {

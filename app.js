@@ -781,6 +781,102 @@ function toonScore() {
 }
 
 // ============================================================
+// Inloggen met een code van 6 cijfers per e-mail
+// ============================================================
+//
+// Stap 1: je vult je e-mail in, Supabase mailt een code (signInWithOtp).
+// Stap 2: je vult de code in, Supabase controleert hem (verifyOtp).
+// Daarna onthoudt Supabase zelf dat je bent ingelogd, ook na herladen.
+
+const inlogDialoog = document.querySelector("#inlog-dialoog");
+const emailFormulier = document.querySelector("#email-formulier");
+const codeFormulier = document.querySelector("#code-formulier");
+const inlogFout = document.querySelector("#inlog-fout");
+let inlogEmail = "";
+
+function toonInlogFout(tekst) {
+  inlogFout.textContent = tekst;
+  inlogFout.hidden = !tekst;
+}
+
+// Het venster openen, altijd bij stap 1
+document.querySelector("#inlog-knop").addEventListener("click", () => {
+  emailFormulier.reset();
+  codeFormulier.reset();
+  emailFormulier.hidden = false;
+  codeFormulier.hidden = true;
+  toonInlogFout("");
+  inlogDialoog.showModal();
+});
+
+inlogDialoog.querySelectorAll(".knop-annuleren").forEach((knop) => {
+  knop.addEventListener("click", () => inlogDialoog.close());
+});
+
+// Een knop uitzetten zolang we op Supabase wachten, zodat je niet twee keer tikt
+async function terwijlBezig(formulier, werk) {
+  const knop = formulier.querySelector("button[type=submit]");
+  knop.disabled = true;
+  try {
+    await werk();
+  } finally {
+    knop.disabled = false;
+  }
+}
+
+// Stap 1: code laten mailen
+emailFormulier.addEventListener("submit", (event) => {
+  event.preventDefault(); // niet de pagina herladen
+  inlogEmail = emailFormulier.email.value.trim();
+  terwijlBezig(emailFormulier, async () => {
+    toonInlogFout("");
+    const { error } = await db.auth.signInWithOtp({ email: inlogEmail });
+    if (error) {
+      toonInlogFout("Het versturen lukte niet. Probeer het over een paar minuten opnieuw.");
+      return;
+    }
+    document.querySelector("#code-uitleg").textContent =
+      `We hebben een code gemaild naar ${inlogEmail}. Vul die hieronder in.`;
+    emailFormulier.hidden = true;
+    codeFormulier.hidden = false;
+    codeFormulier.code.focus();
+  });
+});
+
+// Stap 2: code controleren
+codeFormulier.addEventListener("submit", (event) => {
+  event.preventDefault();
+  terwijlBezig(codeFormulier, async () => {
+    toonInlogFout("");
+    const { error } = await db.auth.verifyOtp({
+      email: inlogEmail,
+      token: codeFormulier.code.value.trim(),
+      type: "email",
+    });
+    if (error) {
+      toonInlogFout("Deze code klopt niet of is verlopen.");
+      return;
+    }
+    inlogDialoog.close();
+  });
+});
+
+document.querySelector("#uitlog-knop").addEventListener("click", async () => {
+  await db.auth.signOut();
+});
+
+// Supabase laat ons weten als je in- of uitlogt (ook bij het opstarten).
+// Dan passen we de accountbalk aan.
+db.auth.onAuthStateChange((gebeurtenis, sessie) => {
+  const ingelogd = Boolean(sessie);
+  document.querySelector("#account-tekst").textContent = ingelogd
+    ? `☁️ ${sessie.user.email}`
+    : "Niet ingelogd";
+  document.querySelector("#inlog-knop").hidden = ingelogd;
+  document.querySelector("#uitlog-knop").hidden = !ingelogd;
+});
+
+// ============================================================
 // Opstarten
 // ============================================================
 
