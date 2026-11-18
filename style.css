@@ -118,6 +118,18 @@
   --mint-donker: #2b6650;
 }
 
+/* Eigen kleuren: --accent, --achtergrond en --tekst zet JavaScript zelf.
+   De rest mengen we daaruit met color-mix(): "neem zoveel procent van
+   de ene kleur en de rest van de andere". */
+[data-thema="eigen"] {
+  --kaart: color-mix(in srgb, var(--achtergrond) 94%, var(--tekst));
+  --tekst-zacht: color-mix(in srgb, var(--tekst) 75%, var(--achtergrond));
+  --tekst-vaag: color-mix(in srgb, var(--tekst) 40%, var(--achtergrond));
+  --rand: color-mix(in srgb, var(--tekst) 15%, var(--achtergrond));
+  --accent-licht: color-mix(in srgb, var(--accent) 18%, var(--achtergrond));
+  --accent-donker: color-mix(in srgb, var(--accent) 55%, var(--tekst));
+}
+
 /* ---------- Basis ---------- */
 
 * {
@@ -617,6 +629,46 @@ form.dialoog-knoppen {
   height: 12px;
   border-radius: 50%;
   background: var(--accent);
+}
+
+/* Eigen kleuren: drie kleurkiezers onder elkaar */
+.eigen-kleuren {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 16px;
+}
+
+.kleur-keuze {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--tekst);
+}
+
+.kleur-keuze input {
+  width: 56px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--rand);
+  border-radius: 8px;
+  background: var(--kaart);
+}
+
+.waarschuwing {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--rond-knop);
+  background: var(--geel-licht);
+  color: var(--geel-donker);
+  font-size: 0.9rem;
+}
+
+/* Rustige knop, zoals Kopiëren */
+.hoofdknop.knop-rustig {
+  background: var(--accent-licht);
+  color: var(--accent-donker);
 }
 
 /* ---------- Account en inloggen ---------- */

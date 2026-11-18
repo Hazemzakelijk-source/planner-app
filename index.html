@@ -183,6 +183,25 @@
       <h2><span aria-hidden="true">🎨</span> Kleuren</h2>
       <!-- JavaScript zet hier de keuzes neer -->
       <div id="thema-keuzes" class="thema-keuzes" role="radiogroup" aria-label="Kleurenschema"></div>
+
+      <!-- Alleen zichtbaar als je "Eigen kleuren" kiest -->
+      <div id="eigen-kleuren" class="eigen-kleuren kaart" hidden>
+        <label class="kleur-keuze">Knoppen
+          <input type="color" name="knoppen">
+        </label>
+        <label class="kleur-keuze">Achtergrond
+          <input type="color" name="achtergrond">
+        </label>
+        <label class="kleur-keuze">Tekst
+          <input type="color" name="tekst">
+        </label>
+        <!-- role="status": een schermlezer leest een nieuwe waarschuwing vanzelf voor -->
+        <div id="contrast-waarschuwing" role="status"></div>
+      </div>
+
+      <!-- data-thema="pastel": deze knop houdt altijd de standaardkleuren,
+           zodat je hem ook vindt als je eigen kleuren onleesbaar zijn -->
+      <button id="standaard-knop" class="hoofdknop knop-rustig" data-thema="pastel">Terug naar standaard</button>
     </section>
   </main>
 

@@ -1253,6 +1253,7 @@ const THEMAS = [
   { id: "donker", naam: "Donker" },
   { id: "fel", naam: "Fel" },
   { id: "blauw", naam: "Rustig blauw" },
+  { id: "eigen", naam: "Eigen kleuren" },
 ];
 
 const themaKeuzes = document.querySelector("#thema-keuzes");
@@ -1279,20 +1280,87 @@ THEMAS.forEach(({ id, naam }) => {
   themaKeuzes.append(keuze);
 });
 
-// Een thema kiezen: bewaren bij je gegevens (en dus ook in Supabase) en meteen tonen
-themaKeuzes.addEventListener("change", (event) => {
+const eigenKleuren = document.querySelector("#eigen-kleuren");
+const waarschuwing = document.querySelector("#contrast-waarschuwing");
+
+// Instellingen aanpassen, bewaren (en dus ook naar Supabase) en meteen tonen
+function wijzigInstellingen(wijziging) {
   const gegevens = laadGegevens();
-  gegevens.instellingen = { ...(gegevens.instellingen || {}), thema: event.target.value };
+  gegevens.instellingen = { ...(gegevens.instellingen || {}), ...wijziging };
   bewaarGegevens(gegevens);
   pasThemaToe(gegevens.instellingen);
+  toonInstellingen();
+}
+
+themaKeuzes.addEventListener("change", (event) => {
+  wijzigInstellingen({ thema: event.target.value });
 });
 
-// De juiste keuze aangevinkt laten zien
+// Een kleurkiezer verschuiven: meteen toepassen ("input" = tijdens het kiezen)
+eigenKleuren.addEventListener("input", (event) => {
+  if (event.target.type !== "color") return;
+  const eigen = { ...EIGEN_STANDAARD, ...(laadGegevens().instellingen || {}).eigen };
+  eigen[event.target.name] = event.target.value;
+  wijzigInstellingen({ eigen });
+});
+
+document.querySelector("#standaard-knop").addEventListener("click", () => {
+  if (!confirm("Terug naar de standaardkleuren? Je eigen kleuren worden gewist.")) return;
+  const gegevens = laadGegevens();
+  gegevens.instellingen = { ...(gegevens.instellingen || {}), thema: THEMA_STANDAARD };
+  delete gegevens.instellingen.eigen;
+  bewaarGegevens(gegevens);
+  pasThemaToe(gegevens.instellingen);
+  toonInstellingen();
+});
+
+// Waarschuwingen als iets slecht leesbaar wordt. Je mag het toch zo laten.
+function contrastWaarschuwingen(eigen) {
+  const meldingen = [];
+  const getal = (waarde) => waarde.toFixed(1).replace(".", ",");
+
+  const tekst = contrast(eigen.tekst, eigen.achtergrond);
+  if (tekst < 4.5) {
+    meldingen.push(`De tekst is slecht leesbaar op deze achtergrond (contrast ${getal(tekst)} : 1).`);
+  }
+  const knop = contrast(besteTekstOp(eigen.knoppen), eigen.knoppen);
+  if (knop < 4.5) {
+    meldingen.push(`De tekst op de knoppen is slecht leesbaar (contrast ${getal(knop)} : 1).`);
+  }
+  const scores = contrast(eigen.knoppen, eigen.achtergrond);
+  if (scores < 4.5) {
+    meldingen.push(`Scores in de knopkleur zijn slecht leesbaar op de achtergrond (contrast ${getal(scores)} : 1).`);
+  }
+  return meldingen;
+}
+
+// De juiste keuze aangevinkt laten zien, en bij "Eigen kleuren" de kleurkiezers
 function toonInstellingen() {
-  const thema = (laadGegevens().instellingen || {}).thema || THEMA_STANDAARD;
+  const instellingen = laadGegevens().instellingen || {};
+  const thema = instellingen.thema || THEMA_STANDAARD;
+  const eigen = { ...EIGEN_STANDAARD, ...instellingen.eigen };
+
   themaKeuzes.querySelectorAll("input").forEach((radio) => {
     radio.checked = radio.value === thema;
   });
+
+  // Het voorbeeldje van "Eigen kleuren" in jouw kleuren
+  zetEigenKleuren(themaKeuzes.querySelector('.thema-voorbeeld[data-thema="eigen"]'), eigen);
+
+  eigenKleuren.hidden = thema !== "eigen";
+  eigenKleuren.querySelectorAll("input").forEach((kiezer) => {
+    kiezer.value = eigen[kiezer.name];
+  });
+
+  waarschuwing.innerHTML = "";
+  if (thema === "eigen") {
+    contrastWaarschuwingen(eigen).forEach((tekst) => {
+      const regel = document.createElement("p");
+      regel.className = "waarschuwing";
+      regel.textContent = `⚠️ ${tekst} Minstens 4,5 : 1 is aan te raden.`;
+      waarschuwing.append(regel);
+    });
+  }
 }
 
 // Het tandwieltje opent het instellingenscherm.
