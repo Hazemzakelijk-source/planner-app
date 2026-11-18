@@ -928,6 +928,14 @@ async function stuurNaarServer() {
   zetSyncStatus("");
 }
 
+// Samenvoegen bij de eerste keer inloggen op een apparaat:
+// dagen die alleen op het apparaat staan komen erbij,
+// en bij een dag die op beide plekken staat wint de online versie.
+// { ...a, ...b } maakt een nieuw object: eerst alles uit a, dan b eroverheen.
+function voegSamen(online, lokaal) {
+  return { ...online, dagen: { ...lokaal.dagen, ...online.dagen } };
+}
+
 // De online versie ophalen en op dit apparaat zetten
 async function haalVanServer() {
   if (!gebruiker) return;
@@ -949,11 +957,22 @@ async function haalVanServer() {
     return;
   }
 
+  // Is op dit apparaat nog nooit met een account gesynchroniseerd?
+  // Dan zijn de gegevens hier van vóór het inloggen, en die willen we bewaren.
+  const eersteKeerHier = !localStorage.getItem(SYNC_GEBRUIKER);
+
   if (!data) {
     // Nog niets online: alles van dit apparaat gaat omhoog
     localStorage.setItem(SYNC_WACHT, "ja");
     await stuurNaarServer();
+  } else if (eersteKeerHier) {
+    // Online staat al iets: samenvoegen en het resultaat weer online zetten
+    const samen = voegSamen(data.gegevens, laadGegevens());
+    localStorage.setItem(OPSLAG_SLEUTEL, JSON.stringify(samen));
+    localStorage.setItem(SYNC_WACHT, "ja");
+    await stuurNaarServer();
   } else {
+    // Gewone keer: de online versie is de juiste
     localStorage.setItem(OPSLAG_SLEUTEL, JSON.stringify(data.gegevens));
   }
   localStorage.setItem(SYNC_GEBRUIKER, gebruiker.id);
