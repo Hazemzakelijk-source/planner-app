@@ -476,6 +476,12 @@ form.dialoog-knoppen {
   font-weight: 500;
 }
 
+/* Herinneringsknop onder de accountbalk, over de hele breedte */
+.herinnering-knop {
+  width: 100%;
+  margin-top: 8px;
+}
+
 /* Formulieren in het inlogvenster: geen eigen kaart, het venster is al de kaart */
 form.dialoog-formulier {
   padding: 0;

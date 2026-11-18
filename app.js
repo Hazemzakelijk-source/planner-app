@@ -863,6 +863,8 @@ codeFormulier.addEventListener("submit", (event) => {
 });
 
 document.querySelector("#uitlog-knop").addEventListener("click", async () => {
+  // Eerst de herinneringen op dit apparaat uitzetten, anders krijg je ze na uitloggen nog steeds
+  await zetHerinneringenUit();
   await db.auth.signOut();
 });
 
@@ -1003,6 +1005,104 @@ db.auth.onAuthStateChange((gebeurtenis, sessie) => {
   if (ingelogd && (gebeurtenis === "SIGNED_IN" || gebeurtenis === "INITIAL_SESSION")) {
     // setTimeout: Supabase raadt aan om hier niet direct te wachten op een andere Supabase-vraag
     setTimeout(haalVanServer, 0);
+  }
+  toonHerinneringKnop();
+});
+
+// ============================================================
+// Herinneringen (pushmeldingen)
+// ============================================================
+//
+// Aanzetten gaat in drie stappen:
+// 1. toestemming vragen aan de iPhone (pas na een tik op de knop),
+// 2. een push-abonnement maken: een uniek "adres" voor dit apparaat,
+// 3. dat abonnement opslaan in Supabase, zodat de Edge Function weet waarheen.
+
+// De publieke VAPID-sleutel. Die mag openbaar zijn; de private sleutel
+// staat alleen in de Supabase-secrets.
+const VAPID_PUBLIEK = "BGcfGa2SyRbxMVyrKcOmS0w5zoVMY4RizP571tE8ft40Ki0YnKP-RcaizhirzRoY647CJqTmdTFqx2_tsb7RTzE";
+
+const herinneringKnop = document.querySelector("#herinnering-knop");
+
+// Kan dit apparaat pushmeldingen krijgen? Op de iPhone alleen in de app op het beginscherm.
+function pushMogelijk() {
+  return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+}
+
+async function haalAbonnement() {
+  const registratie = await navigator.serviceWorker.ready;
+  return registratie.pushManager.getSubscription();
+}
+
+async function toonHerinneringKnop() {
+  if (!gebruiker || !pushMogelijk()) {
+    herinneringKnop.hidden = true;
+    return;
+  }
+  const abonnement = await haalAbonnement();
+  herinneringKnop.textContent = abonnement
+    ? "🔕 Herinneringen uitzetten"
+    : "🔔 Herinneringen aanzetten";
+  herinneringKnop.hidden = false;
+}
+
+// De sleutel staat als tekst (base64url); de browser wil hem als losse bytes
+function naarBytes(tekst) {
+  const base64 = (tekst + "===".slice((tekst.length + 3) % 4)).replace(/-/g, "+").replace(/_/g, "/");
+  return Uint8Array.from(atob(base64), (teken) => teken.charCodeAt(0));
+}
+
+async function zetHerinneringenAan() {
+  // Stap 1: toestemming. Dit moet direct na de tik gebeuren, anders weigert de iPhone.
+  const toestemming = await Notification.requestPermission();
+  if (toestemming !== "granted") {
+    alert("Meldingen zijn niet toegestaan. Je kunt ze aanzetten via Instellingen → Meldingen → Dagplanner.");
+    return;
+  }
+
+  // Stap 2: abonnement maken. userVisibleOnly: we beloven elke push als melding te tonen.
+  const registratie = await navigator.serviceWorker.ready;
+  const abonnement = await registratie.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: naarBytes(VAPID_PUBLIEK),
+  });
+
+  // Stap 3: opslaan in Supabase. toJSON() geeft het adres en de twee sleutels.
+  const gegevens = abonnement.toJSON();
+  const { error } = await db.from("push_abonnementen").upsert(
+    {
+      user_id: gebruiker.id,
+      endpoint: gegevens.endpoint,
+      p256dh: gegevens.keys.p256dh,
+      auth: gegevens.keys.auth,
+    },
+    { onConflict: "endpoint" } // bestaat dit adres al, werk de rij dan bij
+  );
+  if (error) {
+    await abonnement.unsubscribe();
+    alert("Het aanzetten lukte niet. Probeer het later opnieuw.");
+  }
+}
+
+async function zetHerinneringenUit() {
+  if (!pushMogelijk()) return;
+  const abonnement = await haalAbonnement();
+  if (!abonnement) return;
+  await db.from("push_abonnementen").delete().eq("endpoint", abonnement.endpoint);
+  await abonnement.unsubscribe();
+}
+
+herinneringKnop.addEventListener("click", async () => {
+  herinneringKnop.disabled = true;
+  try {
+    if (await haalAbonnement()) {
+      await zetHerinneringenUit();
+    } else {
+      await zetHerinneringenAan();
+    }
+  } finally {
+    herinneringKnop.disabled = false;
+    toonHerinneringKnop();
   }
 });
 
