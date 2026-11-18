@@ -246,8 +246,16 @@ label {
   flex: 1;
 }
 
-/* Lettergrootte 16px voorkomt dat iPhones inzoomen bij het typen */
+/* Lettergrootte minstens 16px in álle invulvelden.
+   Bij kleinere tekst zoomt een iPhone in zodra je op het veld tikt. */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
 input[type="text"],
+input[type="email"],
 input[type="time"],
 input[type="number"],
 textarea {
