@@ -105,6 +105,12 @@ Niets. Volgende stap: vooruit plannen als agenda.
 4. Vrienden: scores van vrienden zien en reageren met een emoji, bijvoorbeeld een spierballetje 💪 (eerst de beveiligingscheck hieronder)
 5. Stories: vrienden plaatsen een foto, bijvoorbeeld in de gym, en anderen reageren met een emoji (eerst de beveiligingscheck hieronder)
 6. Een wekelijkse ranglijst in een groep
+7. Bedtijd: de gebruiker kiest een bedtijd en krijgt een pushmelding een uur en een half uur ervoor
+
+### Alleen met een echte app (App Store en Google Play)
+- Via de schermtijd-functies van Apple controleren of iemand na zijn bedtijd nog op zijn telefoon zit, en dan punten aftrekken
+- Een eigen geluid voor meldingen
+- Notitie: een echte app kan later met Capacitor van de huidige web-app worden gemaakt. Kosten: Apple $99 per jaar, Google Play eenmalig $25
 
 ## Voor later, vóór vrienden en teams
 Een beveiligingscheck, voordat iemand anders dan Hazem de app gebruikt:
