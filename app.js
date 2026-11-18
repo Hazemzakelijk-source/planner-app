@@ -901,9 +901,10 @@ document.querySelector("#uitlog-knop").addEventListener("click", async () => {
 // Ben je ingelogd, dan gaat elke wijziging ook naar Supabase,
 // en bij het opstarten halen we de online versie op.
 
-// Twee extra notities op het apparaat:
+// Extra notities op het apparaat:
 const SYNC_GEBRUIKER = "dagplanner-gebruiker"; // welk account hier al eens is gesynchroniseerd
 const SYNC_WACHT = "dagplanner-wacht"; // "ja" = er zijn wijzigingen die nog niet online staan
+const SYNC_BASIS = "dagplanner-basis"; // de online versie die dit apparaat het laatst zag
 
 let gebruiker = null; // de ingelogde gebruiker, of null
 let syncTimer = null;
@@ -913,6 +914,80 @@ function zetSyncStatus(tekst) {
   const status = document.querySelector("#sync-status");
   status.textContent = tekst;
   status.hidden = !tekst;
+}
+
+// ---------- Versiecontrole ----------
+//
+// Elke keer dat we opslaan, krijgt de rij in Supabase een nieuw versienummer:
+// het tijdstip in "bijgewerkt_op". Dit apparaat onthoudt de versie die het het
+// laatst zag (de "basis"). Bij opslaan zeggen we tegen Supabase:
+// "werk alleen bij als je nog op die versie staat".
+// Heeft een ander apparaat intussen iets veranderd, dan gebeurt er niets.
+// Dan halen we de nieuwe versie op en voegen we samen (zie voegDrieweg).
+
+function laadBasis() {
+  const tekst = localStorage.getItem(SYNC_BASIS);
+  return tekst ? JSON.parse(tekst) : null;
+}
+
+function bewaarBasis(versie, gegevens) {
+  localStorage.setItem(SYNC_BASIS, JSON.stringify({ versie, gegevens }));
+}
+
+// Samenvoegen met drie versies: de basis (wat we het laatst online zagen),
+// lokaal (dit apparaat) en online (wat er nu in Supabase staat).
+// Per dag, en voor de instellingen apart:
+// - heeft dit apparaat dat stuk niet veranderd? Neem dan de online versie.
+// - wel veranderd? Dan houden we onze eigen versie.
+// Zo zet een apparaat met oude gegevens geen verwijderde taak terug,
+// tenzij het zelf op diezelfde dag iets heeft veranderd.
+function voegDrieweg(basis, lokaal, online) {
+  const zelfde = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const kies = (b, l, o) => (zelfde(l, b) ? o : l);
+
+  const datums = new Set([
+    ...Object.keys(basis.dagen || {}),
+    ...Object.keys(lokaal.dagen || {}),
+    ...Object.keys(online.dagen || {}),
+  ]);
+  const dagen = {};
+  for (const datum of datums) {
+    const dag = kies(basis.dagen?.[datum], lokaal.dagen?.[datum], online.dagen?.[datum]);
+    if (dag !== undefined) dagen[datum] = dag; // undefined = verwijderd
+  }
+  const samen = { ...online, dagen };
+  const instellingen = kies(basis.instellingen, lokaal.instellingen, online.instellingen);
+  if (instellingen === undefined) delete samen.instellingen;
+  else samen.instellingen = instellingen;
+  return samen;
+}
+
+// Samenvoegen bij de eerste keer inloggen op een apparaat:
+// dagen die alleen op het apparaat staan komen erbij,
+// en bij een dag die op beide plekken staat wint de online versie.
+// { ...a, ...b } maakt een nieuw object: eerst alles uit a, dan b eroverheen.
+function voegSamen(online, lokaal) {
+  return { ...online, dagen: { ...lokaal.dagen, ...online.dagen } };
+}
+
+async function haalRij() {
+  // maybeSingle: we verwachten één rij, of geen (bij de eerste keer)
+  return db
+    .from("planners")
+    .select("gegevens, bijgewerkt_op")
+    .eq("user_id", gebruiker.id)
+    .maybeSingle();
+}
+
+// ---------- Eén ding tegelijk ----------
+//
+// Versturen en ophalen mogen niet door elkaar heen lopen.
+// Daarom zetten we ze in een rij: de volgende begint pas als de vorige klaar is.
+let syncRij = Promise.resolve();
+
+function inDeRij(werk) {
+  syncRij = syncRij.then(() => werk()).catch(() => zetSyncStatus("⚠️ Niet opgeslagen"));
+  return syncRij;
 }
 
 // Na een wijziging: wacht 1 seconde en stuur dan alles in één keer.
@@ -925,60 +1000,92 @@ function planSync() {
   syncTimer = setTimeout(stuurNaarServer, 1000);
 }
 
-// Alle gegevens en alle dagscores naar Supabase sturen.
-// upsert = toevoegen als de rij nog niet bestaat, anders bijwerken.
-async function stuurNaarServer() {
+function stuurNaarServer() {
+  return inDeRij(versturen);
+}
+
+function haalVanServer() {
+  return inDeRij(ophalen);
+}
+
+// Alle gegevens en alle dagscores naar Supabase sturen
+async function versturen(poging = 1) {
   if (!gebruiker) return;
   const nummer = wijzigingNummer;
   const gegevens = laadGegevens();
+  const basis = laadBasis();
+  const nieuweVersie = new Date().toISOString();
+
+  let gelukt;
+  if (basis) {
+    // Alleen bijwerken als de rij nog op onze basisversie staat
+    const { data, error } = await db
+      .from("planners")
+      .update({ gegevens, bijgewerkt_op: nieuweVersie })
+      .eq("user_id", gebruiker.id)
+      .eq("bijgewerkt_op", basis.versie)
+      .select("user_id");
+    if (error) throw error;
+    gelukt = data.length === 1;
+  } else {
+    // Nog geen basis: alleen een nieuwe rij maken als er nog geen is
+    const { error } = await db
+      .from("planners")
+      .insert({ user_id: gebruiker.id, gegevens, bijgewerkt_op: nieuweVersie });
+    if (error && error.code !== "23505") throw error; // 23505 = bestaat al
+    gelukt = !error;
+  }
+
+  if (!gelukt) {
+    // Een ander apparaat was ons voor. Nieuwe versie ophalen en samenvoegen.
+    if (poging > 3) throw new Error("Te vaak geprobeerd");
+    const { data: rij, error } = await haalRij();
+    if (error) throw error;
+    if (rij) {
+      const samen = basis
+        ? voegDrieweg(basis.gegevens, laadGegevens(), rij.gegevens)
+        : { ...rij.gegevens, dagen: { ...rij.gegevens.dagen, ...laadGegevens().dagen } };
+      localStorage.setItem(OPSLAG_SLEUTEL, JSON.stringify(samen));
+      bewaarBasis(rij.bijgewerkt_op, rij.gegevens);
+    } else {
+      localStorage.removeItem(SYNC_BASIS); // rij bestaat niet meer: opnieuw aanmaken
+    }
+    toonAlles();
+    return versturen(poging + 1);
+  }
+
+  bewaarBasis(nieuweVersie, gegevens);
+
+  // De dagscores. Die zijn altijd uit de gegevens te berekenen,
+  // dus hier is gewoon "toevoegen of bijwerken" (upsert) goed.
   const scores = Object.keys(gegevens.dagen).map((datum) => ({
     user_id: gebruiker.id,
     datum,
     score: Math.round(dagScore(datum)),
   }));
-
-  const planner = await db.from("planners").upsert({
-    user_id: gebruiker.id,
-    gegevens,
-    bijgewerkt_op: new Date().toISOString(),
-  });
-  const dagscores = scores.length
-    ? await db.from("dagscores").upsert(scores)
-    : { error: null };
-
-  if (planner.error || dagscores.error) {
-    zetSyncStatus("⚠️ Niet opgeslagen");
-    return;
+  if (scores.length) {
+    const { error } = await db.from("dagscores").upsert(scores);
+    if (error) throw error;
   }
+
   // Alleen "klaar" als er intussen geen nieuwe wijziging is bijgekomen
   if (nummer === wijzigingNummer) localStorage.removeItem(SYNC_WACHT);
   zetSyncStatus("");
 }
 
-// Samenvoegen bij de eerste keer inloggen op een apparaat:
-// dagen die alleen op het apparaat staan komen erbij,
-// en bij een dag die op beide plekken staat wint de online versie.
-// { ...a, ...b } maakt een nieuw object: eerst alles uit a, dan b eroverheen.
-function voegSamen(online, lokaal) {
-  return { ...online, dagen: { ...lokaal.dagen, ...online.dagen } };
-}
-
 // De online versie ophalen en op dit apparaat zetten
-async function haalVanServer() {
+async function ophalen() {
   if (!gebruiker) return;
 
-  // Staan er nog eigen wijzigingen klaar? Die eerst versturen, anders raken ze kwijt.
+  // Staan er nog eigen wijzigingen klaar? Die eerst versturen.
+  // De versiecontrole zorgt dat we daarbij niets van een ander apparaat wissen.
   if (localStorage.getItem(SYNC_WACHT)) {
-    await stuurNaarServer();
+    await versturen();
+    toonAlles();
     return;
   }
 
-  // maybeSingle: we verwachten één rij, of geen (bij de eerste keer)
-  const { data, error } = await db
-    .from("planners")
-    .select("gegevens")
-    .eq("user_id", gebruiker.id)
-    .maybeSingle();
+  const { data, error } = await haalRij();
   if (error) {
     zetSyncStatus("⚠️ Niet bijgewerkt");
     return;
@@ -990,17 +1097,20 @@ async function haalVanServer() {
 
   if (!data) {
     // Nog niets online: alles van dit apparaat gaat omhoog
+    localStorage.removeItem(SYNC_BASIS);
     localStorage.setItem(SYNC_WACHT, "ja");
-    await stuurNaarServer();
+    await versturen();
   } else if (eersteKeerHier) {
     // Online staat al iets: samenvoegen en het resultaat weer online zetten
     const samen = voegSamen(data.gegevens, laadGegevens());
     localStorage.setItem(OPSLAG_SLEUTEL, JSON.stringify(samen));
+    bewaarBasis(data.bijgewerkt_op, data.gegevens);
     localStorage.setItem(SYNC_WACHT, "ja");
-    await stuurNaarServer();
+    await versturen();
   } else {
     // Gewone keer: de online versie is de juiste
     localStorage.setItem(OPSLAG_SLEUTEL, JSON.stringify(data.gegevens));
+    bewaarBasis(data.bijgewerkt_op, data.gegevens);
   }
   localStorage.setItem(SYNC_GEBRUIKER, gebruiker.id);
   zetSyncStatus("");
