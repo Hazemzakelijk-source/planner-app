@@ -839,10 +839,6 @@ form.dialoog-formulier {
   border-radius: 4px 4px 0 0; /* afgerond aan de bovenkant */
 }
 
-.kolom.gekozen .staaf {
-  background: var(--accent-donker);
-}
-
 .kolom-label {
   position: absolute;
   bottom: -22px;

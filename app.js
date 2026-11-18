@@ -768,7 +768,7 @@ function korteDag(datum) {
 }
 
 // Staafgrafiek van de 7 dagen vóór vandaag, oudste links.
-// Elke staaf is een <button>: tik erop om de score van die dag te zien.
+// Elke staaf is een <button>: tik erop om die dag te bekijken (Terugkijken).
 function tekenGrafiek() {
   const grafiek = document.querySelector("#grafiek");
   const uitleg = document.querySelector("#grafiek-uitleg");
@@ -793,15 +793,11 @@ function tekenGrafiek() {
     label.textContent = korteDag(datum);
 
     kolom.append(staaf, label);
-    kolom.addEventListener("click", () => {
-      uitleg.textContent = tekst;
-      grafiek.querySelectorAll(".kolom").forEach((k) => k.classList.remove("gekozen"));
-      kolom.classList.add("gekozen");
-    });
+    kolom.addEventListener("click", () => openTerugkijken(datumSleutel(datum)));
     grafiek.append(kolom);
   }
 
-  uitleg.textContent = "Tik op een staaf voor de score van die dag.";
+  uitleg.textContent = "Tik op een staaf om die dag te bekijken.";
 }
 
 function toonScore() {
